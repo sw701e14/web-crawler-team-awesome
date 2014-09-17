@@ -9,11 +9,15 @@ namespace Crawler
 {
     public class Index
     {
+        private StemmerInterface stemmer;
+
         private Dictionary<string, LinkedList<int>> stems;
         private List<URL> sites; //Evt tilføje id til typen URL så vi giver et id når den bliver tilføjet il frontier'en
 
-        public Index()
+        public Index(StemmerInterface stemmer)
         {
+            this.stemmer = stemmer;
+
             stems = new Dictionary<string, LinkedList<int>>();
             sites = new List<URL>();
         }
