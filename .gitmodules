@@ -1,0 +1,3 @@
+[submodule "DeadDog"]
+	path = DeadDog
+	url = https://github.com/deaddog/DeadDog.git
