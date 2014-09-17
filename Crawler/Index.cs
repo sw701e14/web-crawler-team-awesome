@@ -10,40 +10,66 @@ namespace Crawler
     public class Index
     {
         private Dictionary<string, LinkedList<int>> stems;
-        private List<URL> sites; //Evt tilføje id til typen URL så vi giver et id når den bliver tilføjet il frontier'en
 
         public Index()
         {
             stems = new Dictionary<string, LinkedList<int>>();
-            sites = new List<URL>();
+            sites = new SitesCollection<URL>();
         }
 
-        private void addStems(StemmerInterface stemmer, URL document)
+        public void AddStems(StemmerInterface stemmer, string document, URL url)
         {
-            foreach (var term in stemmer.GetAllStems(document.GetHTML()))
+            foreach (var term in stemmer.GetAllStems(document))
             {
                 if (stems.ContainsKey(term))
                 {
-                    stems[term].AddLast(1);
+                    stems[term].AddLast(sites.Count + 1);
                 }
                 else
                 {
                     LinkedList<int> l = new LinkedList<int>();
-                    l.AddFirst(1);
+                    l.AddFirst(sites.Count + 1);
                     stems.Add(term, l);
                 }
-            }            
-        }
-
-        public void AddUrl(URL url)
-        {
+            }
             sites.Add(url);
         }
 
-        public int GetId(URL url)
+        private SitesCollection<URL> sites;
+
+        public SitesCollection<URL> Sites
         {
-            return sites.IndexOf(url);
+            get { return sites; }
         }
-        
+
+        public int Count { get { return sites.Count; } }
+
+        public class SitesCollection<T> : IEnumerable<T>
+        {
+            private List<T> sites;
+
+            public SitesCollection()
+            {
+                this.sites = new List<T>();
+            }
+
+            public int Count { get { return sites.Count; } }
+
+            public void Add(T item)
+            {
+                sites.Add(item);
+            }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return sites.GetEnumerator();
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return sites.GetEnumerator();
+            }
+        }
+
     }
 }
