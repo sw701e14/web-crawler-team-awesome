@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Exclusions.cs" />
     <Compile Include="Frontier.cs" />
+    <Compile Include="Index.cs" />
     <Compile Include="PorterStemmer.cs" />
     <Compile Include="Similarity\HashJaccardSimilarity.cs" />
     <Compile Include="Similarity\HashMethod.cs" />
