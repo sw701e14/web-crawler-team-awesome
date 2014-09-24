@@ -47,26 +47,31 @@ namespace Crawler
 
                 bool known = false;
                 foreach (var l in index.GetDocuments())
-                    if (similarity.CalculateSimilarity(l, doc) >= 0.9)
+                {
+                    double simi = similarity.CalculateSimilarity(l, doc);
+                    if (simi >= 0.9)
                     {
-                        WriteColorLine("{0} is similar to {1}.", ConsoleColor.Green, doc, l);
+                        WriteColorLine("{0:0.0}% similar to {1}", ConsoleColor.Green, simi * 100, l.URL.Address);
                         known = true;
                         break;
                     }
-                if (known) continue;
+                }
 
-                index.AddUrl(doc);
+                if (!known)
+                {
+                    index.AddUrl(doc);
 
-                var links = GetLinks(doc.URL, doc.HTML).ToArray();
-                WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
+                    var links = GetLinks(doc.URL, doc.HTML).ToArray();
+                    WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
-                foreach (var l in links)
-                    if (filter.Allow(l))
-                        frontier.Add(l);
+                    foreach (var l in links)
+                        if (filter.Allow(l))
+                            frontier.Add(l);
+                }
+                Console.WriteLine();
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
-            Console.ReadLine();
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
