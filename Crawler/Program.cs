@@ -26,9 +26,8 @@ namespace Crawler
             similarity = new HashJaccardSimilarity<Document>(4);
             frontier = Frontier.Load("frontier.txt");
 
-            Filter filter = new LambdaFilter(url => !frontier.Contains(url) && exclusions.CanAccess(url));
-            filter &= new DomainFilter("en.wikipedia.org");
-            filter &= new ExtentionFilter(false, "jpg", "jpeg", "gif", "png");
+            Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");
+            filter &= new LambdaFilter(url => !frontier.Contains(url) && exclusions.CanAccess(url));
 
             //frontier.Add(new URL(Console.ReadLine()));
             //frontier.Add(new URL("http://sablepp.deaddog.dk/"));
