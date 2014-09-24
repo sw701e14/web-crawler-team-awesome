@@ -8,15 +8,32 @@ using System.Threading.Tasks;
 
 namespace Crawler
 {
-    public class Document
+    public class Document : IEquatable<Document>
     {
         private readonly int id;
         private readonly URL url;
         private string html;
 
+        private static System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
+        private static string getHashString(string input)
+        {
+            byte[] buffer = Encoding.Unicode.GetBytes(input);
+            buffer = md5.ComputeHash(buffer);
+
+            StringBuilder sb = new StringBuilder(buffer.Length * 2);
+            foreach (byte b in buffer)
+                sb.AppendFormat("{0:x2}", b);
+
+            return sb.ToString();
+        }
+
         private string filePath
         {
-            get { return "url_" + id + ".txt"; }
+            get
+            {
+                Directory.CreateDirectory("url_cache");
+                return Path.Combine("url_cache", "url_" + getHashString(url.Address) + ".txt");
+            }
         }
 
         public Document(int id, URL url)
@@ -30,7 +47,7 @@ namespace Crawler
         {
             get { return id; }
         }
-        
+
         public URL URL
         {
             get { return url; }
@@ -59,6 +76,11 @@ namespace Crawler
             }
 
             return false;
+        }
+
+        public bool Equals(Document other)
+        {
+            return id == other.id;
         }
     }
 }

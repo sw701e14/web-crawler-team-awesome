@@ -11,31 +11,31 @@ namespace Crawler
     {
         private StemmerInterface stemmer;
 
-        private Dictionary<string, LinkedList<int>> stems;
-        private List<URL> sites; //Evt tilføje id til typen URL så vi giver et id når den bliver tilføjet til frontier'en
+        private Dictionary<string, LinkedList<DocumentReference>> stems;
+        private List<Document> sites;
 
         public Index(StemmerInterface stemmer)
         {
             this.stemmer = stemmer;
 
-            stems = new Dictionary<string, LinkedList<int>>();
-            sites = new List<URL>();
+            stems = new Dictionary<string, LinkedList<DocumentReference>>();
+            sites = new List<Document>();
         }
 
-        public void AddUrl(URL url, string document)
+        public void AddUrl(Document document)
         {
-            int index = sites.Count;
-            sites.Add(url);
+            sites.Add(document);
 
-            foreach (var term in stemmer.GetAllStems(document))
+            foreach (var term in stemmer.GetAllStems(document.HTML))
             {
-                if (stems.ContainsKey(term))
-                    addToSortedList(stems[term].First, index);
+                DocumentReference reference = new DocumentReference(document, term.Item2);
+                if (stems.ContainsKey(term.Item1))
+                    addToSortedList(stems[term.Item1].First, reference);
                 else
                 {
-                    LinkedList<int> l = new LinkedList<int>();
-                    l.AddFirst(index);
-                    stems.Add(term, l);
+                    LinkedList<DocumentReference> l = new LinkedList<DocumentReference>();
+                    l.AddFirst(reference);
+                    stems.Add(term.Item1, l);
                 }
             }
         }
@@ -45,27 +45,44 @@ namespace Crawler
             get { return sites.Count; }
         }
 
-        private void addToSortedList(LinkedListNode<int> node, int i)
+        private void addToSortedList(LinkedListNode<DocumentReference> node, DocumentReference reference)
         {
-            if (node.Value <= i)
+            if (node.Value.Document.Id <= reference.Document.Id)
             {
                 if (node.Next == null)
-                    node.List.AddLast(i);
+                    node.List.AddLast(reference);
                 else
-                    addToSortedList(node.Next, i);
+                    addToSortedList(node.Next, reference);
             }
             else
-                node.List.AddBefore(node, i);
+                node.List.AddBefore(node, reference);
         }
 
-        public int GetId(URL url)
+        public IEnumerable<Document> GetDocuments()
         {
-            return sites.IndexOf(url);
+            foreach (var doc in sites)
+                yield return doc;
         }
-        public IEnumerable<URL> GetURLs()
+
+        public class DocumentReference
         {
-            foreach (var url in sites)
-                yield return url;
+            private Document doc;
+            private int count;
+
+            public DocumentReference(Document doc, int count)
+            {
+                this.doc = doc;
+                this.count = count;
+            }
+
+            public Document Document
+            {
+                get { return doc; }
+            }
+            public int Count
+            {
+                get { return count; }
+            }
         }
     }
 }

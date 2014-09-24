@@ -15,15 +15,40 @@ namespace Crawler
 
     public static class StemmerExtension
     {
-        public static IEnumerable<string> GetAllStems(this StemmerInterface stemmer, string document)
+        public static IEnumerable<Tuple<string, int>> GetAllStems(this StemmerInterface stemmer, string document)
         {
             return GetAllStems(stemmer, document, x => x.Split(' '));
         }
 
-        public static IEnumerable<string> GetAllStems(this StemmerInterface stemmer, string document, Func<string, IEnumerable<string>> splitter)
+        public static IEnumerable<Tuple<string, int>> GetAllStems(this StemmerInterface stemmer, string document, Func<string, IEnumerable<string>> splitter)
         {
-            foreach (var s in splitter(getContent(document)))
-                yield return stemmer.StemTerm(s);
+            string last = null;
+            int count = 0;
+            foreach (var s in getStemsInOrder(stemmer, splitter(getContent(document))))
+            {
+                if (last != s)
+                {
+                    if (last != null)
+                        yield return Tuple.Create(last, count);
+
+                    last = s;
+                    count = 1;
+                }
+                else
+                    count++;
+            }
+
+            if (last != null)
+                yield return Tuple.Create(last, count);
+        }
+
+        private static IEnumerable<string> getStemsInOrder(StemmerInterface stemmer, IEnumerable<string> collection)
+        {
+            return from e in collection
+                   let term = stemmer.StemTerm(e).Trim('\0', ' ', '\t', '\r', '\n')
+                   where term.Length > 0
+                   orderby term
+                   select term;
         }
 
         private static string getContent(string document)
