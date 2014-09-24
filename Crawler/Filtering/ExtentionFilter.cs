@@ -21,10 +21,10 @@ namespace Crawler.Filtering
         public override bool Allow(URL url)
         {
             int lastPeriod = url.Address.LastIndexOf('.');
-            if(lastPeriod==0)
+            if (lastPeriod == 0)
                 return !allow;
 
-            string ext = url.Address.Substring(lastPeriod).ToLower();
+            string ext = url.Address.Substring(lastPeriod + 1).ToLower();
 
             for (int i = 0; i < extensions.Length; i++)
                 if (extensions[i] == ext)
