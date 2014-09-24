@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DeadDog;
 using System.Text.RegularExpressions;
 using System.Net;
+using Crawler.Filtering;
 
 namespace Crawler
 {
@@ -24,6 +25,11 @@ namespace Crawler
             exclusions = new Exclusions();
             similarity = new HashJaccardSimilarity<Document>(4);
             frontier = Frontier.Load("frontier.txt");
+
+            Filter filter = new LambdaFilter(url => !frontier.Contains(url) && exclusions.CanAccess(url));
+            filter &= new DomainFilter("en.wikipedia.org");
+            filter &= new ExtentionFilter(false, "jpg", "jpeg", "gif", "png");
+
             //frontier.Add(new URL(Console.ReadLine()));
             //frontier.Add(new URL("http://sablepp.deaddog.dk/"));
             //frontier.Add(new URL("http://en.wikipedia.org/wiki/World_War_II"));
@@ -56,33 +62,12 @@ namespace Crawler
                 WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
                 foreach (var l in links)
-                    if (filter(l))
+                    if (filter.Allow(l))
                         frontier.Add(l);
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
             Console.ReadLine();
-        }
-
-        private static bool filter(URL url)
-        {
-            //if (!url.Address.StartsWith("http://en.wikipedia.org"))
-            //    return false;
-
-            int lastPeriod = url.Address.LastIndexOf('.');
-            if (lastPeriod > 0)
-            {
-                string ext = url.Address.Substring(lastPeriod).ToLower();
-                if (ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".png")
-                    return false;
-            }
-
-            if (frontier.Contains(url))
-                return false;
-            if (!exclusions.CanAccess(url))
-                return false;
-
-            return true;
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
