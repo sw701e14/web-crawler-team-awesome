@@ -55,7 +55,7 @@ namespace Crawler
                 WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
                 foreach (var l in links)
-                    if (filter(l) && !frontier.Contains(l) && exclusions.CanAccess(l))
+                    if (filter(l))
                         frontier.Add(l);
             }
             DateTime end = DateTime.Now;
@@ -75,6 +75,11 @@ namespace Crawler
                 if (ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".png")
                     return false;
             }
+
+            if (frontier.Contains(url))
+                return false;
+            if (!exclusions.CanAccess(url))
+                return false;
 
             return true;
         }
