@@ -19,6 +19,8 @@ namespace Crawler
 
         static void Main(string[] args)
         {
+            Console.WindowWidth += 50;
+
             exclusions = new Exclusions();
             similarity = new HashJaccardSimilarity<URL>(4);
             frontier = new Frontier<URL>();
