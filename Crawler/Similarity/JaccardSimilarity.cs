@@ -47,8 +47,16 @@ namespace Crawler
         private static IEnumerable<string> GetShingles(string input, int shinglesize)
         {
             string[] words = input.Split(' ');
+            StringBuilder sb = new StringBuilder();
+
             for (int i = 0; i < words.Length - shinglesize + 1; i++)
-                yield return string.Join(" ", words.Skip(i).Take(shinglesize));
+            {
+                for (int index = i; index < i + shinglesize; index++)
+                    sb.Append(" " + words[index]);
+
+                yield return sb.ToString().Substring(1);
+                sb.Clear();
+            }
         }
     }
 }
