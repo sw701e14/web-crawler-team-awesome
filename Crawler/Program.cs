@@ -44,6 +44,7 @@ namespace Crawler
                 foreach (var l in index.GetURLs())
                     if (similarity.CalculateSimilarity(l, link) >= 0.9)
                     {
+                        WriteColorLine("{0} is similar to {1}.", ConsoleColor.Green, link, l);
                         known = true;
                         break;
                     }
