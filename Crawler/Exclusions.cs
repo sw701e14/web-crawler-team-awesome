@@ -11,7 +11,7 @@ namespace Crawler
 {
     public class Exclusions
     {
-        private Dictionary<string, record[]> records;
+        private Dictionary<string, record> records;
         private string agent;
 
         public Exclusions()
@@ -20,7 +20,7 @@ namespace Crawler
         }
         public Exclusions(string agent)
         {
-            this.records = new Dictionary<string, record[]>();
+            this.records = new Dictionary<string, record>();
             this.agent = agent;
 
             if (this.agent == null)
@@ -35,18 +35,17 @@ namespace Crawler
             string path = url.Address.Substring(domain.Length);
 
             if (!records.ContainsKey(domain))
-                records.Add(domain, LoadDomain(url).Where(r => matchesAgent(r.UserAgent)).ToArray());
+                records.Add(domain, LoadDomain(url, this.agent));
 
-            foreach (var agent in records[domain])
-            {
-                foreach (var allow in agent.Allowed)
-                    if (matchesDisallow(path, allow))
-                        return true;
+            var agent = records[domain];
 
-                foreach (var disallow in agent.Disallowed)
-                    if (matchesDisallow(path, disallow))
-                        return false;
-            }
+            foreach (var allow in agent.Allowed)
+                if (matchesDisallow(path, allow))
+                    return true;
+
+            foreach (var disallow in agent.Disallowed)
+                if (matchesDisallow(path, disallow))
+                    return false;
 
             return true;
         }
@@ -59,10 +58,10 @@ namespace Crawler
             return path.StartsWith(disallow);
         }
 
-        private bool matchesAgent(string agent)
+        private static bool matchesAgent(string agent, string myagent)
         {
             Regex r = new Regex(agent.Replace("*", ".*"));
-            return r.IsMatch(this.agent);
+            return r.IsMatch(myagent);
         }
 
         #region Caching
@@ -107,13 +106,17 @@ namespace Crawler
 
         #endregion
 
-        private static IEnumerable<record> LoadDomain(URL url)
+        private static record LoadDomain(URL url, string userAgent)
         {
-            string robotTxt = getRobotsText(url);
-            if (robotTxt == null)
-                yield break;
+            record rec = new record();
 
-            record rec = null;
+            string robotTxt = getRobotsText(url);
+            if (robotTxt == "" || robotTxt == null)
+                return rec;
+
+            bool lastisagent = false;
+            bool use = false;
+
             foreach (var l in robotTxt.Split('\r', '\n'))
             {
                 string line = l;
@@ -131,43 +134,35 @@ namespace Crawler
                 string name = field.Groups["field"].Value.ToLower();
                 string value = field.Groups["value"].Value;
 
-                if (name == "user-agent")
+                if (name == "user-agent" || name == "useragent")
                 {
-                    if (rec != null)
-                    {
-                        var temp = rec;
-                        rec = new record(value.ToLower());
-
-                        if (temp.Disallowed.Count == 0 && temp.Allowed.Count == 0)
-                        {
-                            temp.Disallowed = rec.Disallowed;
-                            temp.Allowed = rec.Allowed;
-                        }
-
-                        yield return temp;
-                    }
-                    else
-                        rec = new record(value);
+                    bool useNew = matchesAgent(value, userAgent);
+                    use = lastisagent ? use || useNew : useNew;
+                    lastisagent = true;
                 }
-                else if (name == "disallow")
-                    rec.Disallowed.Add(value);
-                else if (name == "allowed")
-                    rec.Allowed.Add(value);
+                else
+                {
+                    lastisagent = false;
+                    if (use)
+                    {
+                        if (name == "disallow")
+                            rec.Disallowed.Add(value);
+                        else if (name == "allowed")
+                            rec.Allowed.Add(value);
+                    }
+                }
             }
 
-            if (rec != null)
-                yield return rec;
+            return rec;
         }
 
         private class record
         {
-            public readonly string UserAgent;
             public List<string> Disallowed;
             public List<string> Allowed;
 
-            public record(string userAgent)
+            public record()
             {
-                this.UserAgent = userAgent;
                 this.Disallowed = new List<string>();
                 this.Allowed = new List<string>();
             }
