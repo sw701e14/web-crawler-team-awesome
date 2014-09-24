@@ -59,7 +59,8 @@ namespace Crawler
             {
                 if (html == null && !loadHtmlFromDisc())
                 {
-                    html = url.GetHTML(true);
+                    try { html = url.GetHTML(true); }
+                    catch { html = ""; }
                     File.WriteAllText(filePath, html, Encoding.Unicode);
                 }
 
