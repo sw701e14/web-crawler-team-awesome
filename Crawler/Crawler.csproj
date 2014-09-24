@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySearchExtension.cs" />
     <Compile Include="Document.cs" />
     <Compile Include="Exclusions.cs" />
     <Compile Include="Filtering\AndFilter.cs" />
