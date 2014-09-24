@@ -1,6 +1,7 @@
 ﻿using DeadDog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -34,7 +35,7 @@ namespace Crawler
             string path = url.Address.Substring(domain.Length);
 
             if (!records.ContainsKey(domain))
-                records.Add(domain, LoadDomain(domain).Where(r => matchesAgent(r.UserAgent)).ToArray());
+                records.Add(domain, LoadDomain(url).Where(r => matchesAgent(r.UserAgent)).ToArray());
 
             foreach (var agent in records[domain])
             {
@@ -64,12 +65,53 @@ namespace Crawler
             return r.IsMatch(this.agent);
         }
 
-        private static IEnumerable<record> LoadDomain(string domain)
+        #region Caching
+
+        private static System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
+        private static string getHashString(string input)
         {
-            URL robotURL = new URL(domain + "/robots.txt");
-            string robotTxt;
+            byte[] buffer = Encoding.Unicode.GetBytes(input);
+            buffer = md5.ComputeHash(buffer);
+
+            StringBuilder sb = new StringBuilder(buffer.Length * 2);
+            foreach (byte b in buffer)
+                sb.AppendFormat("{0:x2}", b);
+
+            return sb.ToString();
+        }
+
+        private static string getFilePath(URL url)
+        {
+            Directory.CreateDirectory("robots_cache");
+            return Path.Combine("robots_cache", getHashString(url.Domain) + ".txt");
+        }
+
+        private static string getRobotsText(URL url)
+        {
+            string file = getFilePath(url);
+            if (File.Exists(file))
+                return File.ReadAllText(file);
+
+            URL robotURL = url.GetURLFromLink("/robots.txt");
+            string robotTxt = null;
+
             try { robotTxt = robotURL.GetHTML(); }
-            catch { yield break; }
+            catch { robotTxt = ""; }
+
+            robotTxt = robotTxt.Trim();
+
+            File.WriteAllText(file, robotTxt);
+
+            return robotTxt.Length == 0 ? null : robotTxt;
+        }
+
+        #endregion
+
+        private static IEnumerable<record> LoadDomain(URL url)
+        {
+            string robotTxt = getRobotsText(url);
+            if (robotTxt == null)
+                yield break;
 
             record rec = null;
             foreach (var l in robotTxt.Split('\r', '\n'))
