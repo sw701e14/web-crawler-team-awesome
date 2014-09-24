@@ -12,7 +12,7 @@ namespace Crawler
         private StemmerInterface stemmer;
 
         private Dictionary<string, LinkedList<int>> stems;
-        private List<URL> sites; //Evt tilføje id til typen URL så vi giver et id når den bliver tilføjet il frontier'en
+        private List<URL> sites; //Evt tilføje id til typen URL så vi giver et id når den bliver tilføjet til frontier'en
 
         public Index(StemmerInterface stemmer)
         {
@@ -22,32 +22,50 @@ namespace Crawler
             sites = new List<URL>();
         }
 
-        private void addStems(StemmerInterface stemmer, URL document)
+        public void AddUrl(URL url, string document)
         {
-            foreach (var term in stemmer.GetAllStems(document.GetHTML()))
+            int index = sites.Count;
+            sites.Add(url);
+
+            foreach (var term in stemmer.GetAllStems(document))
             {
                 if (stems.ContainsKey(term))
-                {
-                    stems[term].AddLast(1);
-                }
+                    addToSortedList(stems[term].First, index);
                 else
                 {
                     LinkedList<int> l = new LinkedList<int>();
-                    l.AddFirst(1);
+                    l.AddFirst(index);
                     stems.Add(term, l);
                 }
-            }            
+            }
         }
 
-        public void AddUrl(URL url)
+        public int SiteCount
         {
-            sites.Add(url);
+            get { return sites.Count; }
+        }
+
+        private void addToSortedList(LinkedListNode<int> node, int i)
+        {
+            if (node.Value <= i)
+            {
+                if (node.Next == null)
+                    node.List.AddLast(i);
+                else
+                    addToSortedList(node.Next, i);
+            }
+            else
+                node.List.AddBefore(node, i);
         }
 
         public int GetId(URL url)
         {
             return sites.IndexOf(url);
         }
-        
+        public IEnumerable<URL> GetURLs()
+        {
+            foreach (var url in sites)
+                yield return url;
+        }
     }
 }

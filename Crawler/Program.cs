@@ -15,7 +15,7 @@ namespace Crawler
         private static ISimilarityComparer<URL> similarity;
         private static Frontier<URL> frontier;
 
-        private static List<URL> loaded = new List<URL>();
+        private static Index index = new Index(new PorterStemmer());
 
         static void Main(string[] args)
         {
@@ -29,7 +29,7 @@ namespace Crawler
             frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
 
             DateTime start = DateTime.Now;
-            while (!frontier.Empty && loaded.Count < 30)
+            while (!frontier.Empty && index.SiteCount < 30)
             {
                 var link = frontier.Next();
                 Console.WriteLine("Loading {0}", link.Address);
@@ -41,7 +41,7 @@ namespace Crawler
                 similarity.LoadShingles(link, html);
 
                 bool known = false;
-                foreach (var l in loaded)
+                foreach (var l in index.GetURLs())
                     if (similarity.CalculateSimilarity(l, link) >= 0.9)
                     {
                         known = true;
@@ -49,7 +49,7 @@ namespace Crawler
                     }
                 if (known) continue;
 
-                loaded.Add(link);
+                index.AddUrl(link, html);
 
                 var links = GetLinks(link.Address, html).ToArray();
                 WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
