@@ -12,52 +12,51 @@ namespace Crawler
     class Program
     {
         private static Exclusions exclusions;
-        private static ISimilarityComparer<URL> similarity;
-        private static Frontier<URL> frontier;
+        private static ISimilarityComparer<Document> similarity;
+        private static Frontier frontier;
 
-        private static List<URL> loaded = new List<URL>();
+        private static Index index = new Index(new PorterStemmer());
 
         static void Main(string[] args)
         {
-            exclusions = new Exclusions();
-            similarity = new HashJaccardSimilarity<URL>(4);
-            frontier = new Frontier<URL>();
+            Console.WindowWidth += 50;
 
+            exclusions = new Exclusions();
+            similarity = new HashJaccardSimilarity<Document>(4);
+            frontier = Frontier.Load("frontier.txt");
             //frontier.Add(new URL(Console.ReadLine()));
             //frontier.Add(new URL("http://sablepp.deaddog.dk/"));
             //frontier.Add(new URL("http://en.wikipedia.org/wiki/World_War_II"));
-            frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
+
+            //frontier = new Frontier();
+            //frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
+            //Frontier.Save(frontier, "frontier.txt");
 
             DateTime start = DateTime.Now;
-            while (!frontier.Empty && loaded.Count < 30)
+            while (!frontier.Empty && index.SiteCount < 30)
             {
-                var link = frontier.Next();
-                //Console.ForegroundColor = ConsoleColor.Gray;
-                //Console.WriteLine("Loading {0}", link.Address);
+                var doc = frontier.Next();
+                Console.WriteLine("Loading {0}", doc.URL);
 
-                string html;
-                try { html = link.GetHTML(true); }
-                catch { continue; }
-
-                similarity.LoadShingles(link, html);
+                similarity.LoadShingles(doc, doc.HTML);
 
                 bool known = false;
-                foreach (var l in loaded)
-                    if (similarity.CalculateSimilarity(l, link) >= 0.9)
+                foreach (var l in index.GetDocuments())
+                    if (similarity.CalculateSimilarity(l, doc) >= 0.9)
                     {
+                        WriteColorLine("{0} is similar to {1}.", ConsoleColor.Green, doc, l);
                         known = true;
                         break;
                     }
                 if (known) continue;
 
-                loaded.Add(link);
+                index.AddUrl(doc);
 
-                var links = GetLinks(link.Address, html).ToArray();
-                //Console.ForegroundColor = ConsoleColor.Blue;
-                //Console.WriteLine("Found {0} links", links.Length);
+                var links = GetLinks(doc.URL, doc.HTML).ToArray();
+                WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
                 foreach (var l in links)
-                    if (filter(l) && !frontier.Contains(l) && exclusions.CanAccess(l))
+                    if (filter(l))
                         frontier.Add(l);
             }
             DateTime end = DateTime.Now;
@@ -78,10 +77,15 @@ namespace Crawler
                     return false;
             }
 
+            if (frontier.Contains(url))
+                return false;
+            if (!exclusions.CanAccess(url))
+                return false;
+
             return true;
         }
 
-        private static IEnumerable<URL> GetLinks(string origin, string html)
+        private static IEnumerable<URL> GetLinks(URL origin, string html)
         {
             var matches = Regex.Matches(html, "<a[^>]+");
 
@@ -92,10 +96,10 @@ namespace Crawler
                 url = getUrl(url);
 
                 if (url != null)
-                    url = normalize(origin, url);
-
-                if (url != null)
-                    yield return new URL(url);
+                {
+                    try { yield return origin.GetURLFromLink(url); }
+                    finally { /* This is only here so that try is allowed */ }
+                }
             }
         }
         private static string getUrl(string anchor)
@@ -115,47 +119,13 @@ namespace Crawler
 
             return href;
         }
-        private static string normalize(string origin, string url)
+
+        private static void WriteColorLine(string text, ConsoleColor color, params object[] args)
         {
-            string domain = Regex.Match(origin, "https?://[^/]*").Value;
-
-            if (url.StartsWith("//"))
-                url = domain.Substring(0, domain.IndexOf(':')) + ":" + url;
-
-            if (!url.StartsWith("http") && !url.StartsWith("/"))
-            {
-                string prefix = origin.Substring(8).Contains('/') ? origin.Substring(0, origin.LastIndexOf('/')) : origin;
-                url = prefix + "/" + url;
-            }
-
-            if (url.StartsWith("http"))
-            {
-                domain = Regex.Match(url, "https?://[^/]*").Value;
-                url = url.Substring(domain.Length);
-            }
-
-            domain = domain.ToLower();
-
-            Regex.Replace(url, "%[a-zA-Z0-9][a-zA-Z0-9]", m => replaceEncoding(m.Value.ToUpper()));
-
-            return domain + url;
-        }
-        private static string replaceEncoding(string symbol)
-        {
-            int i = int.Parse(symbol.Substring(1), System.Globalization.NumberStyles.HexNumber);
-
-            if (
-                (i >= 0x41 && i <= 0x5A) ||
-                (i >= 0x61 && i <= 0x7A) ||
-                (i >= 0x30 && i <= 0x39) ||
-                i == 0x2D ||
-                i == 0x2E ||
-                i == 0x5F ||
-                i == 0x7E
-               )
-                return ((char)i).ToString();
-            else
-                return symbol;
+            ConsoleColor temp = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(text, args);
+            Console.ForegroundColor = temp;
         }
     }
 }
