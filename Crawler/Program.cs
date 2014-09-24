@@ -32,8 +32,7 @@ namespace Crawler
             while (!frontier.Empty && loaded.Count < 30)
             {
                 var link = frontier.Next();
-                //Console.ForegroundColor = ConsoleColor.Gray;
-                //Console.WriteLine("Loading {0}", link.Address);
+                Console.WriteLine("Loading {0}", link.Address);
 
                 string html;
                 try { html = link.GetHTML(true); }
@@ -53,8 +52,7 @@ namespace Crawler
                 loaded.Add(link);
 
                 var links = GetLinks(link.Address, html).ToArray();
-                //Console.ForegroundColor = ConsoleColor.Blue;
-                //Console.WriteLine("Found {0} links", links.Length);
+                WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
                 foreach (var l in links)
                     if (filter(l) && !frontier.Contains(l) && exclusions.CanAccess(l))
@@ -156,6 +154,14 @@ namespace Crawler
                 return ((char)i).ToString();
             else
                 return symbol;
+        }
+
+        private static void WriteColorLine(string text, ConsoleColor color, params object[] args)
+        {
+            ConsoleColor temp = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine(text, args);
+            Console.ForegroundColor = temp;
         }
     }
 }
