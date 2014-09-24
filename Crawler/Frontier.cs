@@ -24,6 +24,9 @@ namespace Crawler
         {
             Frontier front = new Frontier();
 
+            if (!File.Exists(filename))
+                return front;
+
             using (StreamReader reader = new StreamReader(filename))
             {
                 front.nextID = int.Parse(reader.ReadLine());
