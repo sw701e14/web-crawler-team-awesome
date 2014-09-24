@@ -61,9 +61,25 @@ namespace Crawler
 
         public void Add(URL item)
         {
-            Document doc = new Document(nextID++, item);
-            this.elements.Enqueue(doc);
-            this.allIKnow.Add(doc);
+            int index = -1;
+
+            for (int i = 0; i < allIKnow.Count; i++)
+                if (allIKnow[i].URL.Equals(item))
+                {
+                    index = i;
+                    break;
+                }
+
+            if (index != -1)
+            {
+                this.elements.Enqueue(allIKnow[index]);
+            }
+            else
+            {
+                Document doc = new Document(nextID++, item);
+                this.elements.Enqueue(doc);
+                this.allIKnow.Add(doc);
+            }
         }
         public bool Contains(Document item)
         {
