@@ -66,6 +66,7 @@
     <Compile Include="Similarity\SketchJaccardSimilarity.cs" />
     <Compile Include="Similarity\StringJaccardSimilarity.cs" />
     <Compile Include="StemmerInterface.cs" />
+    <Compile Include="ThreadedFrontier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

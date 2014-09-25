@@ -12,9 +12,8 @@ namespace Crawler
 {
     class Program
     {
-        private static Exclusions exclusions;
         private static ISimilarityComparer<Document> similarity;
-        private static Frontier frontier;
+        private static ThreadedFrontier frontier;
 
         private static Index index = new Index(new PorterStemmer());
 
@@ -22,13 +21,11 @@ namespace Crawler
         {
             Console.WindowWidth += 50;
 
-            exclusions = new Exclusions();
             similarity = new HashJaccardSimilarity<Document>(4);
-            frontier = new Frontier();
+            frontier = new ThreadedFrontier(new Exclusions());
             frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
 
             Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");
-            filter &= new LambdaFilter(url => !frontier.Contains(url) && exclusions.CanAccess(url));
 
             DateTime start = DateTime.Now;
             while (!frontier.Empty && index.SiteCount < 30)
@@ -70,7 +67,9 @@ namespace Crawler
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
+
             Console.ReadKey(true);
+            frontier.Kill();
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
