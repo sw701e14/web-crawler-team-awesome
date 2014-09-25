@@ -1,6 +1,6 @@
 ﻿using DeadDog;
 
-namespace Crawler.Filtering
+namespace WebCrawler.Filtering
 {
     public class OrFilter : Filter
     {

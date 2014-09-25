@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Crawler
+namespace WebCrawler
 {
     public class HashJaccardSimilarity<TKey> : JaccardSimilarity<TKey, int>
     {

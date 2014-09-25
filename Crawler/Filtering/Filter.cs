@@ -1,7 +1,7 @@
 ﻿using DeadDog;
 using System;
 
-namespace Crawler.Filtering
+namespace WebCrawler.Filtering
 {
     public abstract class Filter
     {

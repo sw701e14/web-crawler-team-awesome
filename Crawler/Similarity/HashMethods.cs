@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Crawler
+namespace WebCrawler
 {
     public static class HashMethods
     {

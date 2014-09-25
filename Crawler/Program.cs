@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using DeadDog;
 using System.Text.RegularExpressions;
 using System.Net;
-using Crawler.Filtering;
+using WebCrawler.Filtering;
 
-namespace Crawler
+namespace WebCrawler
 {
     class Program
     {
