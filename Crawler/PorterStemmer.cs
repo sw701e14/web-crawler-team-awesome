@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Crawler
 {
-    public class PorterStemmer : StemmerInterface
+    public class PorterStemmer : IStemmer
     {
         private char[] b;
         private int i,     /* offset into b */

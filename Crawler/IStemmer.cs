@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 
 namespace Crawler
 {
-    public interface StemmerInterface
+    public interface IStemmer
     {
         string StemTerm(string s);
     }
 
     public static class StemmerExtension
     {
-        public static IEnumerable<Tuple<string, int>> GetAllStems(this StemmerInterface stemmer, string document)
+        public static IEnumerable<Tuple<string, int>> GetAllStems(this IStemmer stemmer, string document)
         {
             return GetAllStems(stemmer, document, x => x.Split(' '));
         }
 
-        public static IEnumerable<Tuple<string, int>> GetAllStems(this StemmerInterface stemmer, string document, Func<string, IEnumerable<string>> splitter)
+        public static IEnumerable<Tuple<string, int>> GetAllStems(this IStemmer stemmer, string document, Func<string, IEnumerable<string>> splitter)
         {
             string last = null;
             int count = 0;
@@ -42,7 +42,7 @@ namespace Crawler
                 yield return Tuple.Create(last, count);
         }
 
-        private static IEnumerable<string> getStemsInOrder(StemmerInterface stemmer, IEnumerable<string> collection)
+        private static IEnumerable<string> getStemsInOrder(IStemmer stemmer, IEnumerable<string> collection)
         {
             return from e in collection
                    let term = stemmer.StemTerm(e).Trim('\0', ' ', '\t', '\r', '\n')

@@ -9,12 +9,12 @@ namespace Crawler
 {
     public class Index
     {
-        private StemmerInterface stemmer;
+        private IStemmer stemmer;
 
         private Dictionary<string, LinkedList<DocumentReference>> stems;
         private List<Document> sites;
 
-        public Index(StemmerInterface stemmer)
+        public Index(IStemmer stemmer)
         {
             this.stemmer = stemmer;
 
