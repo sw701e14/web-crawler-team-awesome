@@ -15,7 +15,9 @@ namespace WebCrawler
 
         private System.Threading.Thread loaderThread;
         private bool killed = false;
-        private bool killReady = false;
+        private bool inProgress = false;
+        private bool empty = true;
+        private object emptyObject = new object();
 
         public ThreadedFrontier(Exclusions exclusions)
         {
@@ -36,6 +38,8 @@ namespace WebCrawler
         {
             while (tempQueue.Count == 0) { System.Threading.Thread.Sleep(100); if (killed)return; }
 
+            inProgress = true;
+
             URL item;
             lock (tempQueue) item = tempQueue.Dequeue();
 
@@ -46,11 +50,17 @@ namespace WebCrawler
                 if (frontier.Contains(item))
                     return;
 
-            frontier.Add(item);
+            lock (frontier)
+                frontier.Add(item);
+
+            inProgress = false;
         }
 
         public void Add(URL item)
         {
+            lock (emptyObject)
+                empty = false;
+
             lock (tempQueue)
                 tempQueue.Enqueue(item);
         }
@@ -63,24 +73,14 @@ namespace WebCrawler
                 {
                     if (!frontier.Empty)
                     {
-                        doc = frontier.Next();
-                        killReady = false;
-                    }
-                    else if (tempQueue.Count == 0)
-                    {
-                        if (!killReady)
+                        lock (emptyObject)
                         {
-                            killReady = true;
-                            System.Threading.Thread.Sleep(500);
+                            doc = frontier.Next();
+                            empty = frontier.Empty && tempQueue.Count == 0;
                         }
-                        else
-                            return null;
                     }
-                    else
-                    {
-                        killReady = false;
-                        System.Threading.Thread.Sleep(100);
-                    }
+                    else if (empty && !inProgress)
+                        return null;
                 }
 
             return doc;
