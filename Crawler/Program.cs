@@ -28,9 +28,10 @@ namespace WebCrawler
             Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");
 
             DateTime start = DateTime.Now;
-            while (index.SiteCount < 30)
+
+            Document doc = frontier.Next();
+            while (doc != null && index.SiteCount < 30)
             {
-                var doc = frontier.Next();
                 Console.WriteLine("{0}", doc.URL);
                 Console.WriteLine("Loading {0} shingles...", doc.HTML.Split(' ').Length);
                 similarity.LoadShingles(doc, doc.HTML);
@@ -64,6 +65,7 @@ namespace WebCrawler
                     WriteColorLine("Found {0} links, added {1} to frontier", ConsoleColor.Cyan, links.Length, c);
                 }
                 Console.WriteLine();
+                doc = frontier.Next();
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
