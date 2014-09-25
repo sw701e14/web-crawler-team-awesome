@@ -28,7 +28,7 @@ namespace Crawler
             Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");
 
             DateTime start = DateTime.Now;
-            while (!frontier.Empty && index.SiteCount < 30)
+            while (index.SiteCount < 30)
             {
                 var doc = frontier.Next();
                 Console.WriteLine("{0}", doc.URL);

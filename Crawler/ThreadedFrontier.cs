@@ -48,11 +48,6 @@ namespace Crawler
             frontier.Add(item);
         }
 
-        public bool Empty
-        {
-            get { return false; }// lock (tempQueue) return frontier.Empty && tempQueue.Count == 0; }
-        }
-
         public void Add(URL item)
         {
             lock (tempQueue)
