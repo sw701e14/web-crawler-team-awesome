@@ -20,43 +20,6 @@ namespace Crawler
             this.elements = new Queue<Document>();
         }
 
-        public static Frontier Load(string filename)
-        {
-            Frontier front = new Frontier();
-
-            if (!File.Exists(filename))
-                return front;
-
-            using (StreamReader reader = new StreamReader(filename))
-            {
-                front.nextID = int.Parse(reader.ReadLine());
-                string line;
-                while (!reader.EndOfStream)
-                {
-                    line = reader.ReadLine();
-                    int comma = line.IndexOf(',');
-                    int id = int.Parse(line.Substring(0, comma));
-                    string url = line.Substring(comma + 1);
-
-                    Document doc = new Document(id, new DeadDog.URL(url));
-                    front.allIKnow.Add(doc);
-                    front.elements.Enqueue(doc);
-                }
-            }
-
-            return front;
-        }
-
-        public static void Save(Frontier frontier, string filename)
-        {
-            using (StreamWriter writer = new StreamWriter(filename))
-            {
-                writer.WriteLine(frontier.nextID);
-                foreach (var e in frontier.allIKnow)
-                    writer.WriteLine("{0},{1}", e.Id, e.URL.Address);
-            }
-        }
-
         public bool Empty
         {
             get { return elements.Count == 0; }

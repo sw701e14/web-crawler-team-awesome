@@ -24,18 +24,11 @@ namespace Crawler
 
             exclusions = new Exclusions();
             similarity = new HashJaccardSimilarity<Document>(4);
-            frontier = Frontier.Load("frontier.txt");
+            frontier = new Frontier();
+            frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
 
             Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");
             filter &= new LambdaFilter(url => !frontier.Contains(url) && exclusions.CanAccess(url));
-
-            //frontier.Add(new URL(Console.ReadLine()));
-            //frontier.Add(new URL("http://sablepp.deaddog.dk/"));
-            //frontier.Add(new URL("http://en.wikipedia.org/wiki/World_War_II"));
-
-            //frontier = new Frontier();
-            //frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
-            //Frontier.Save(frontier, "frontier.txt");
 
             DateTime start = DateTime.Now;
             while (!frontier.Empty && index.SiteCount < 30)
