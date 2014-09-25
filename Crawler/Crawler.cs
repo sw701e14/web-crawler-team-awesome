@@ -28,18 +28,14 @@ namespace WebCrawler
             Document doc = frontier.Next();
             while (doc != null)
             {
-                Console.WriteLine("{0}", doc.URL);
-                Console.WriteLine("Loading {0} shingles...", doc.HTML.Split(' ').Length);
                 similarity.LoadShingles(doc, doc.HTML);
 
-                Console.WriteLine("Determining similarities...");
                 bool known = false;
                 foreach (var l in index.GetDocuments())
                 {
                     double simi = similarity.CalculateSimilarity(l, doc);
                     if (simi >= 0.9)
                     {
-                        WriteColorLine("{0:0.0}% similar to {1}", ConsoleColor.Green, simi * 100, l.URL.Address);
                         known = true;
                         break;
                     }
@@ -48,7 +44,6 @@ namespace WebCrawler
                 if (!known)
                 {
                     index.AddUrl(doc);
-                    Console.WriteLine("Extracting links...");
                     var links = GetLinks(doc.URL, doc.HTML).ToArray();
 
                     int c = 0;
@@ -58,9 +53,8 @@ namespace WebCrawler
                             frontier.Add(l);
                             c++;
                         }
-                    WriteColorLine("Found {0} links, added {1} to frontier", ConsoleColor.Cyan, links.Length, c);
                 }
-                Console.WriteLine();
+                Console.WriteLine("{0}", doc.URL);
                 doc = frontier.Next();
             }
         }
@@ -98,14 +92,6 @@ namespace WebCrawler
                 return null;
 
             return href;
-        }
-
-        private static void WriteColorLine(string text, ConsoleColor color, params object[] args)
-        {
-            ConsoleColor temp = Console.ForegroundColor;
-            Console.ForegroundColor = color;
-            Console.WriteLine(text, args);
-            Console.ForegroundColor = temp;
         }
     }
 }
