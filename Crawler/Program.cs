@@ -34,10 +34,11 @@ namespace Crawler
             while (!frontier.Empty && index.SiteCount < 30)
             {
                 var doc = frontier.Next();
-                Console.WriteLine("Loading {0}", doc.URL);
-
+                Console.WriteLine("{0}", doc.URL);
+                Console.WriteLine("Loading {0} shingles...", doc.HTML.Split(' ').Length);
                 similarity.LoadShingles(doc, doc.HTML);
 
+                Console.WriteLine("Determining similarities...");
                 bool known = false;
                 foreach (var l in index.GetDocuments())
                 {
@@ -53,18 +54,23 @@ namespace Crawler
                 if (!known)
                 {
                     index.AddUrl(doc);
-
+                    Console.WriteLine("Extracting links...");
                     var links = GetLinks(doc.URL, doc.HTML).ToArray();
-                    WriteColorLine("Found {0} links", ConsoleColor.Blue, links.Length);
 
+                    int c = 0;
                     foreach (var l in links)
                         if (filter.Allow(l))
+                        {
                             frontier.Add(l);
+                            c++;
+                        }
+                    WriteColorLine("Found {0} links, added {1} to frontier", ConsoleColor.Cyan, links.Length, c);
                 }
                 Console.WriteLine();
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
+            Console.ReadKey(true);
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
