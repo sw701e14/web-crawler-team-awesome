@@ -15,6 +15,7 @@ namespace WebCrawler
 
         private System.Threading.Thread loaderThread;
         private bool killed = false;
+        private bool killReady = false;
 
         public ThreadedFrontier(Exclusions exclusions)
         {
@@ -61,9 +62,25 @@ namespace WebCrawler
                 lock (frontier)
                 {
                     if (!frontier.Empty)
+                    {
                         doc = frontier.Next();
+                        killReady = false;
+                    }
+                    else if (tempQueue.Count == 0)
+                    {
+                        if (!killReady)
+                        {
+                            killReady = true;
+                            System.Threading.Thread.Sleep(500);
+                        }
+                        else
+                            return null;
+                    }
                     else
+                    {
+                        killReady = false;
                         System.Threading.Thread.Sleep(100);
+                    }
                 }
 
             return doc;
