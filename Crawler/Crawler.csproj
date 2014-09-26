@@ -55,6 +55,7 @@
     <Compile Include="Filtering\Filter.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="PorterStemmer.cs" />
+    <Compile Include="Ranker.cs" />
     <Compile Include="Similarity\HashJaccardSimilarity.cs" />
     <Compile Include="Similarity\HashMethod.cs" />
     <Compile Include="Similarity\HashMethods.cs" />
