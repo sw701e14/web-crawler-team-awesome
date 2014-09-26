@@ -22,7 +22,7 @@ namespace Crawler
             sites = new List<Document>();
         }
 
-        public Dictionary<string, LinkedList<DocumentReference>> Stems { get; }
+        public Dictionary<string, LinkedList<DocumentReference>> Stems { get { return stems; } }
 
         public void AddUrl(Document document)
         {

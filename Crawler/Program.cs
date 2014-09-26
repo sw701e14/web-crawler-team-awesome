@@ -38,7 +38,7 @@ namespace Crawler
             //Frontier.Save(frontier, "frontier.txt");
 
             DateTime start = DateTime.Now;
-            while (!frontier.Empty && index.SiteCount < 30)
+            while (!frontier.Empty && index.SiteCount < 10)
             {
                 var doc = frontier.Next();
                 Console.WriteLine("Loading {0}", doc.URL);
@@ -72,6 +72,8 @@ namespace Crawler
             }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
+
+            Ranker r = new Ranker(index);
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
