@@ -9,13 +9,18 @@ namespace Crawler
     public class Ranker
     {
         private Index index;
-        private Dictionary<string, Dictionary<Document, decimal>> termFrequencies;
+        private Dictionary<string, Dictionary<Document, double>> termFrequenciesWeigthed;
+        private Dictionary<string, double> inverseDocumentFrequencies;
+        private Dictionary<string, double> tfidf;
 
         public Ranker(Index index)
         {
             this.index = index;
-            this.termFrequencies = new Dictionary<string, Dictionary<Document, decimal>>();
+            this.termFrequenciesWeigthed = new Dictionary<string, Dictionary<Document, double>>();
+            this.inverseDocumentFrequencies = new Dictionary<string, double>();
+            this.tfidf = new Dictionary<string, double>();
             var tf = calculateTermFrequencyWeighting();
+            var idf = inverseDocumentFrequencyWeighting();
         }
 
 
@@ -30,24 +35,34 @@ namespace Crawler
         }
 
         //Returns a matrix with terms as rows and documents as columns and filled in is the tf*
-        private Dictionary<string, Dictionary<Document, decimal>> calculateTermFrequencyWeighting()
+        private Dictionary<string, Dictionary<Document, double>> calculateTermFrequencyWeighting()
         {
             foreach (var term in index.Stems)
             {
-                Dictionary<Document, decimal> docs = new Dictionary<Document, decimal>();
+                Dictionary<Document, double> docs = new Dictionary<Document, double>();
                 foreach (var doc in term.Value)
                 {
-                    docs.Add(doc.Document, Convert.ToDecimal(1 + Math.Log10(doc.Count)));
+                    docs.Add(doc.Document, 1 + Math.Log10(doc.Count));
                 }
-                termFrequencies.Add(term.Key, docs);
+                termFrequenciesWeigthed.Add(term.Key, docs);
 
             }
-            return termFrequencies;
+            return termFrequenciesWeigthed;
         }
 
-        private void inverseDocumentFrequencyWeighting() { }
+        private Dictionary<string, double> inverseDocumentFrequencyWeighting() 
+        {
+            foreach (var term in index.Stems)
+            {
+                inverseDocumentFrequencies.Add(term.Key, Math.Log10(index.SiteCount/term.Value.Count));
+            }
+            return inverseDocumentFrequencies;
+        }
 
-        private void termFrequencyInverseDocumentWeigthing() { }
+        private void termFrequencyInverseDocumentWeigthing() 
+        {
+
+        }
 
         private void normalizeVector() { }
 
