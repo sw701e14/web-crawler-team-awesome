@@ -22,6 +22,8 @@ namespace Crawler
             sites = new List<Document>();
         }
 
+        public Dictionary<string, LinkedList<DocumentReference>> Stems { get; }
+
         public void AddUrl(Document document)
         {
             sites.Add(document);
