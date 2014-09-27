@@ -6,33 +6,34 @@ using System.Threading.Tasks;
 
 namespace Crawler
 {
+    //Abbrevations:
+    //TF = Term frequency
+    //IDF = Inverse document frequency
+    //WT = Weigthed
+    //NORM = Normalized vector
     public class Ranker
     {
         private Index index;
         private StemmerInterface stemmer;
-        private Dictionary<string, Dictionary<Document, double>> termFrequenciesWeigthed;
-        private Dictionary<string, double> inverseDocumentFrequencies;
-        private Dictionary<string, Dictionary<Document, double>> tfidf;
-        private Dictionary<string, Dictionary<Document, double>> normWt;
+        private Dictionary<string, Dictionary<Document, double>> TF_WT;
+        private Dictionary<string, double> IDF_WT;
+        private Dictionary<string, Dictionary<Document, double>> TF_IDF_WT;
+        private Dictionary<string, Dictionary<Document, double>> NORM_WT;
 
         public Ranker(Index index, StemmerInterface stemmer)
         {
             this.index = index;
             this.stemmer = stemmer;
-            this.termFrequenciesWeigthed = new Dictionary<string, Dictionary<Document, double>>();
-            this.inverseDocumentFrequencies = new Dictionary<string, double>();
-            this.tfidf = new Dictionary<string, Dictionary<Document, double>>();
-            this.normWt = new Dictionary<string, Dictionary<Document, double>>();
-            var tf = calculateTermFrequencyWeighting();
-            var idf = inverseDocumentFrequencyWeighting();
-            var s = termFrequencyInverseDocumentWeigthing();
-            var x = normalizeVectorWeigthed();
-            var test = getScores(x, getNormWTSearchQuery(getWTSearchQuery(getTfForSearchQuery("popularity in the late 1980s through the early 1990s, it gained considerable worldwide success and fame"))));
+            this.TF_WT = getTF_WT();
+            this.IDF_WT = getIDF_WT();
+            this.TF_IDF_WT = getTF_IDF_WT();
+            this.NORM_WT = getNORM_WT();
         }
 
 
         public Dictionary<Document, double> GetTopHits(string searchQuery)
         {
+
             throw new NotImplementedException();
         }
 
@@ -76,7 +77,7 @@ namespace Crawler
 
         //Documents in index:
 
-        private Dictionary<string, Dictionary<Document, double>> calculateTermFrequencyWeighting()
+        private Dictionary<string, Dictionary<Document, double>> getTF_WT()
         {
             foreach (var term in index.Stems)
             {
@@ -85,45 +86,45 @@ namespace Crawler
                 {
                     docs.Add(doc.Document, calculateTF_WT(doc.Count));
                 }
-                termFrequenciesWeigthed.Add(term.Key, docs);
+                TF_WT.Add(term.Key, docs);
 
             }
-            return termFrequenciesWeigthed;
+            return TF_WT;
         }
 
-        private Dictionary<string, double> inverseDocumentFrequencyWeighting()
+        private Dictionary<string, double> getIDF_WT()
         {
             foreach (var term in index.Stems)
             {
-                inverseDocumentFrequencies.Add(term.Key, calculateIDF_WT(index.SiteCount, term.Value.Count));
+                IDF_WT.Add(term.Key, calculateIDF_WT(index.SiteCount, term.Value.Count));
             }
-            return inverseDocumentFrequencies;
+            return IDF_WT;
         }
 
-        private Dictionary<string, Dictionary<Document, double>> termFrequencyInverseDocumentWeigthing()
+        private Dictionary<string, Dictionary<Document, double>> getTF_IDF_WT()
         {
-            foreach (var term in termFrequenciesWeigthed)
+            foreach (var term in TF_WT)
             {
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
                 foreach (var doc in term.Value)
                 {
-                    docs.Add(doc.Key, calculateTF_IDF_WT(doc.Value, inverseDocumentFrequencies[term.Key]));
+                    docs.Add(doc.Key, calculateTF_IDF_WT(doc.Value, IDF_WT[term.Key]));
                 }
-                tfidf.Add(term.Key, docs);
+                TF_IDF_WT.Add(term.Key, docs);
 
             }
-            return tfidf;
+            return TF_IDF_WT;
         }
 
-        private Dictionary<string, Dictionary<Document, double>> normalizeVectorWeigthed()
+        private Dictionary<string, Dictionary<Document, double>> getNORM_WT()
         {
             double length = 0;
-            foreach (var term in tfidf)
+            foreach (var term in TF_IDF_WT)
             {
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
                 foreach (var doc in term.Value)
                 {
-                    foreach (var t in tfidf)
+                    foreach (var t in TF_IDF_WT)
                     {
                         if (t.Value.ContainsKey(doc.Key))
                         {
@@ -132,16 +133,16 @@ namespace Crawler
                     }
                     docs.Add(doc.Key, doc.Value / Math.Sqrt(length));
                 }
-                normWt.Add(term.Key, docs);
+                NORM_WT.Add(term.Key, docs);
             }
-            return tfidf;
+            return TF_IDF_WT;
         }
 
 
 
         //Search Query:
         
-        private Dictionary<string, int> getTfForSearchQuery(string searchQuery)
+        private Dictionary<string, int> getTFSearchQuery(string searchQuery)
         {
             Dictionary<string, int> stems = new Dictionary<string, int>();
             foreach (var term in stemmer.GetAllStems(searchQuery))
@@ -151,39 +152,39 @@ namespace Crawler
             return stems;
         }
 
-        private Dictionary<string, double> getWTSearchQuery(Dictionary<string, int> tf)
+        private Dictionary<string, double> getTF_IDF_WTSearchQuery(Dictionary<string, int> TF)
         {
-            Dictionary<string, double> wt = new Dictionary<string, double>();
-            foreach (var term in tf)
+            Dictionary<string, double> TF_IDF_WT = new Dictionary<string, double>();
+            foreach (var term in TF)
             {
-                wt.Add(term.Key, calculateTF_IDF_WT(calculateTF_WT(term.Value), calculateIDF_WT(index.SiteCount, term.Value)));
+                TF_IDF_WT.Add(term.Key, calculateTF_IDF_WT(calculateTF_WT(term.Value), calculateIDF_WT(index.SiteCount, term.Value)));
             }
-            return wt;
+            return TF_IDF_WT;
         }
 
-        private Dictionary<string, double> getNormWTSearchQuery(Dictionary<string, double> wt)
+        private Dictionary<string, double> getNORM_WTSearchQuery(Dictionary<string, double> TF_IDF_WT)
         {
-            Dictionary<string, double> normWT = new Dictionary<string, double>();
-            double vectorLength = calculateVectorLength(wt);
-            foreach (var term in wt)
+            Dictionary<string, double> NORM_WT = new Dictionary<string, double>();
+            double vectorLength = calculateVectorLength(TF_IDF_WT);
+            foreach (var term in TF_IDF_WT)
             {
-                normWT.Add(term.Key, calculateNormVector(term.Value, vectorLength));
+                NORM_WT.Add(term.Key, calculateNormVector(term.Value, vectorLength));
             }
-            return normWT;
+            return NORM_WT;
         }
 
 
 
         //Score:
 
-        private Dictionary<Document, double> getScores(Dictionary<string, Dictionary<Document, double>> documentsNormWT, Dictionary<string, double> searchQueryNormWT)
+        private Dictionary<Document, double> getScores(Dictionary<string, Dictionary<Document, double>> documentsNORM_WT, Dictionary<string, double> searchQueryNORM_WT)
         {
             Dictionary<Document, double> scores = new Dictionary<Document, double>();
-            foreach (var term in searchQueryNormWT)
+            foreach (var term in searchQueryNORM_WT)
             {
-                if (documentsNormWT.Keys.Contains(term.Key))
+                if (documentsNORM_WT.Keys.Contains(term.Key))
                 {
-                    foreach (var doc in documentsNormWT[term.Key])
+                    foreach (var doc in documentsNORM_WT[term.Key])
                     {
                         if (scores.Keys.Contains(doc.Key))
                         {
