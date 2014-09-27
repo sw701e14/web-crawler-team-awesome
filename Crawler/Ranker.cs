@@ -9,14 +9,16 @@ namespace Crawler
     public class Ranker
     {
         private Index index;
+        private StemmerInterface stemmer;
         private Dictionary<string, Dictionary<Document, double>> termFrequenciesWeigthed;
         private Dictionary<string, double> inverseDocumentFrequencies;
         private Dictionary<string, Dictionary<Document, double>> tfidf;
         private Dictionary<string, Dictionary<Document, double>> normWt;
 
-        public Ranker(Index index)
+        public Ranker(Index index, StemmerInterface stemmer)
         {
             this.index = index;
+            this.stemmer = stemmer;
             this.termFrequenciesWeigthed = new Dictionary<string, Dictionary<Document, double>>();
             this.inverseDocumentFrequencies = new Dictionary<string, double>();
             this.tfidf = new Dictionary<string, Dictionary<Document, double>>();
@@ -25,6 +27,13 @@ namespace Crawler
             var idf = inverseDocumentFrequencyWeighting();
             var s = termFrequencyInverseDocumentWeigthing();
             var x = normalizeVectorWeigthed();
+            var test = getScores(x, getNormWTSearchQuery(getWTSearchQuery(getTfForSearchQuery("popularity in the late 1980s through the early 1990s, it gained considerable worldwide success and fame"))));
+        }
+
+
+        public Dictionary<Document, double> GetTopHits(string searchQuery)
+        {
+            throw new NotImplementedException();
         }
 
 
@@ -45,7 +54,7 @@ namespace Crawler
 
         private double calculateNormVector(double TF_IDF_WT, double vectorLength)
         {
-            return TF_IDF_WT / Math.Log10(vectorLength);
+            return TF_IDF_WT / Math.Sqrt(vectorLength);
         }
 
         private double calculateVectorLength(double TF_IDF_WT)
@@ -131,8 +140,7 @@ namespace Crawler
 
 
         //Search Query:
-
-        private StemmerInterface stemmer;
+        
         private Dictionary<string, int> getTfForSearchQuery(string searchQuery)
         {
             Dictionary<string, int> stems = new Dictionary<string, int>();
@@ -181,11 +189,14 @@ namespace Crawler
                         {
                             scores[doc.Key] += term.Value * doc.Value;
                         }
-                        scores.Add(doc.Key, term.Value * doc.Value);
+                        else
+                        {
+                            scores.Add(doc.Key, term.Value * doc.Value);
+                        }                        
                     }
                 }
             }
             return scores;
-        }
+        }        
     }
 }

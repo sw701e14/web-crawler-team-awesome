@@ -73,7 +73,7 @@ namespace Crawler
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
 
-            Ranker r = new Ranker(index);
+            Ranker r = new Ranker(index, new PorterStemmer());
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)
