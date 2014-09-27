@@ -168,7 +168,24 @@ namespace Crawler
 
         //Score:
 
-        private void calculateScore() { }
-
+        private Dictionary<Document, double> getScores(Dictionary<string, Dictionary<Document, double>> documentsNormWT, Dictionary<string, double> searchQueryNormWT)
+        {
+            Dictionary<Document, double> scores = new Dictionary<Document, double>();
+            foreach (var term in searchQueryNormWT)
+            {
+                if (documentsNormWT.Keys.Contains(term.Key))
+                {
+                    foreach (var doc in documentsNormWT[term.Key])
+                    {
+                        if (scores.Keys.Contains(doc.Key))
+                        {
+                            scores[doc.Key] += term.Value * doc.Value;
+                        }
+                        scores.Add(doc.Key, term.Value * doc.Value);
+                    }
+                }
+            }
+            return scores;
+        }
     }
 }
