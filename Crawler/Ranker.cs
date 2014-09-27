@@ -28,17 +28,45 @@ namespace Crawler
         }
 
 
-        private void termFrequency()
+        private double calculateTF_WT(int count)
         {
-            var s = index.Stems;
+            return 1 + Math.Log10(count);
         }
 
-        private void documentFrequency()
+        private double calculateIDF_WT(int siteCount, int termCount)
         {
-
+            return Math.Log10(siteCount / termCount);
         }
 
-        //Returns a matrix with terms as rows and documents as columns and filled in is the tf*
+        private double calculateTF_IDF_WT(double TF_WT, double IDF_WT)
+        {
+            return TF_WT * IDF_WT;
+        }
+
+        private double calculateNormVector(double TF_IDF_WT, double vectorLength)
+        {
+            return TF_IDF_WT / Math.Log10(vectorLength);
+        }
+
+        private double calculateVectorLength(double TF_IDF_WT)
+        {
+            return Math.Pow(TF_IDF_WT, 2);
+        }
+
+        private double calculateVectorLength(Dictionary<string, double> wt)
+        {
+            double length = 0;
+            foreach (var term in wt)
+            {
+                length += calculateVectorLength(term.Value);
+            }
+            return length;
+        }
+
+
+
+        //Documents in index:
+
         private Dictionary<string, Dictionary<Document, double>> calculateTermFrequencyWeighting()
         {
             foreach (var term in index.Stems)
@@ -46,7 +74,7 @@ namespace Crawler
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
                 foreach (var doc in term.Value)
                 {
-                    docs.Add(doc.Document, 1 + Math.Log10(doc.Count));
+                    docs.Add(doc.Document, calculateTF_WT(doc.Count));
                 }
                 termFrequenciesWeigthed.Add(term.Key, docs);
 
@@ -54,23 +82,23 @@ namespace Crawler
             return termFrequenciesWeigthed;
         }
 
-        private Dictionary<string, double> inverseDocumentFrequencyWeighting() 
+        private Dictionary<string, double> inverseDocumentFrequencyWeighting()
         {
             foreach (var term in index.Stems)
             {
-                inverseDocumentFrequencies.Add(term.Key, Math.Log10(index.SiteCount/term.Value.Count));
+                inverseDocumentFrequencies.Add(term.Key, calculateIDF_WT(index.SiteCount, term.Value.Count));
             }
             return inverseDocumentFrequencies;
         }
 
-        private Dictionary<string, Dictionary<Document, double>> termFrequencyInverseDocumentWeigthing() 
+        private Dictionary<string, Dictionary<Document, double>> termFrequencyInverseDocumentWeigthing()
         {
             foreach (var term in termFrequenciesWeigthed)
             {
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
                 foreach (var doc in term.Value)
                 {
-                    docs.Add(doc.Key, doc.Value*inverseDocumentFrequencies[term.Key]);
+                    docs.Add(doc.Key, calculateTF_IDF_WT(doc.Value, inverseDocumentFrequencies[term.Key]));
                 }
                 tfidf.Add(term.Key, docs);
 
@@ -78,7 +106,7 @@ namespace Crawler
             return tfidf;
         }
 
-        private Dictionary<string,Dictionary<Document,double>> normalizeVectorWeigthed() 
+        private Dictionary<string, Dictionary<Document, double>> normalizeVectorWeigthed()
         {
             double length = 0;
             foreach (var term in tfidf)
@@ -90,7 +118,7 @@ namespace Crawler
                     {
                         if (t.Value.ContainsKey(doc.Key))
                         {
-                             length += Math.Pow(t.Value[doc.Key],2);
+                            length += Math.Pow(t.Value[doc.Key], 2);
                         }
                     }
                     docs.Add(doc.Key, doc.Value / Math.Sqrt(length));
@@ -99,6 +127,46 @@ namespace Crawler
             }
             return tfidf;
         }
+
+
+
+        //Search Query:
+
+        private StemmerInterface stemmer;
+        private Dictionary<string, int> getTfForSearchQuery(string searchQuery)
+        {
+            Dictionary<string, int> stems = new Dictionary<string, int>();
+            foreach (var term in stemmer.GetAllStems(searchQuery))
+            {
+                stems.Add(term.Item1, term.Item2);
+            }
+            return stems;
+        }
+
+        private Dictionary<string, double> getWTSearchQuery(Dictionary<string, int> tf)
+        {
+            Dictionary<string, double> wt = new Dictionary<string, double>();
+            foreach (var term in tf)
+            {
+                wt.Add(term.Key, calculateTF_IDF_WT(calculateTF_WT(term.Value), calculateIDF_WT(index.SiteCount, term.Value)));
+            }
+            return wt;
+        }
+
+        private Dictionary<string, double> getNormWTSearchQuery(Dictionary<string, double> wt)
+        {
+            Dictionary<string, double> normWT = new Dictionary<string, double>();
+            double vectorLength = calculateVectorLength(wt);
+            foreach (var term in wt)
+            {
+                normWT.Add(term.Key, calculateNormVector(term.Value, vectorLength));
+            }
+            return normWT;
+        }
+
+
+
+        //Score:
 
         private void calculateScore() { }
 
