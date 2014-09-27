@@ -74,6 +74,13 @@ namespace Crawler
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
 
             Ranker r = new Ranker(index, new PorterStemmer());
+            Console.WriteLine("Search: ");
+            string searchQuery = Console.ReadLine();
+            foreach (var doc in r.GetTopHits(searchQuery))
+            {
+                Console.WriteLine(doc.Key.URL + " " + doc.Value);
+            }
+            Console.ReadKey();
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)

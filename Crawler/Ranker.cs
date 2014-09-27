@@ -33,52 +33,15 @@ namespace Crawler
 
         public Dictionary<Document, double> GetTopHits(string searchQuery)
         {
-
-            throw new NotImplementedException();
+            return getScores(NORM_WT, getNORM_WTSearchQuery(getTF_IDF_WTSearchQuery(getTFSearchQuery(searchQuery)))).OrderByDescending(v => v.Value).ToDictionary(v => v.Key, v => v.Value);
         }
-
-
-        private double calculateTF_WT(int count)
-        {
-            return 1 + Math.Log10(count);
-        }
-
-        private double calculateIDF_WT(int siteCount, int termCount)
-        {
-            return Math.Log10(siteCount / termCount);
-        }
-
-        private double calculateTF_IDF_WT(double TF_WT, double IDF_WT)
-        {
-            return TF_WT * IDF_WT;
-        }
-
-        private double calculateNormVector(double TF_IDF_WT, double vectorLength)
-        {
-            return TF_IDF_WT / Math.Sqrt(vectorLength);
-        }
-
-        private double calculateVectorLength(double TF_IDF_WT)
-        {
-            return Math.Pow(TF_IDF_WT, 2);
-        }
-
-        private double calculateVectorLength(Dictionary<string, double> wt)
-        {
-            double length = 0;
-            foreach (var term in wt)
-            {
-                length += calculateVectorLength(term.Value);
-            }
-            return length;
-        }
-
 
 
         //Documents in index:
 
         private Dictionary<string, Dictionary<Document, double>> getTF_WT()
         {
+            Dictionary<string, Dictionary<Document, double>> tf_wt = new Dictionary<string, Dictionary<Document, double>>();
             foreach (var term in index.Stems)
             {
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
@@ -86,23 +49,25 @@ namespace Crawler
                 {
                     docs.Add(doc.Document, calculateTF_WT(doc.Count));
                 }
-                TF_WT.Add(term.Key, docs);
+                tf_wt.Add(term.Key, docs);
 
             }
-            return TF_WT;
+            return tf_wt;
         }
 
         private Dictionary<string, double> getIDF_WT()
         {
+            Dictionary<string, double> idf_wt = new Dictionary<string, double>();
             foreach (var term in index.Stems)
             {
-                IDF_WT.Add(term.Key, calculateIDF_WT(index.SiteCount, term.Value.Count));
+                idf_wt.Add(term.Key, calculateIDF_WT(index.SiteCount, term.Value.Count));
             }
-            return IDF_WT;
+            return idf_wt;
         }
 
         private Dictionary<string, Dictionary<Document, double>> getTF_IDF_WT()
         {
+            Dictionary<string, Dictionary<Document, double>> tf_idf_wt = new Dictionary<string, Dictionary<Document, double>>();
             foreach (var term in TF_WT)
             {
                 Dictionary<Document, double> docs = new Dictionary<Document, double>();
@@ -110,14 +75,15 @@ namespace Crawler
                 {
                     docs.Add(doc.Key, calculateTF_IDF_WT(doc.Value, IDF_WT[term.Key]));
                 }
-                TF_IDF_WT.Add(term.Key, docs);
+                tf_idf_wt.Add(term.Key, docs);
 
             }
-            return TF_IDF_WT;
+            return tf_idf_wt;
         }
 
         private Dictionary<string, Dictionary<Document, double>> getNORM_WT()
         {
+            Dictionary<string, Dictionary<Document, double>> norm_wt = new Dictionary<string, Dictionary<Document, double>>();
             double length = 0;
             foreach (var term in TF_IDF_WT)
             {
@@ -133,9 +99,9 @@ namespace Crawler
                     }
                     docs.Add(doc.Key, doc.Value / Math.Sqrt(length));
                 }
-                NORM_WT.Add(term.Key, docs);
+                norm_wt.Add(term.Key, docs);
             }
-            return TF_IDF_WT;
+            return norm_wt;
         }
 
 
@@ -198,6 +164,45 @@ namespace Crawler
                 }
             }
             return scores;
-        }        
+        }
+
+
+        
+        //Calculation methods:
+
+        private double calculateTF_WT(int count)
+        {
+            return 1 + Math.Log10(count);
+        }
+
+        private double calculateIDF_WT(int siteCount, int termCount)
+        {
+            return Math.Log10(siteCount / termCount);
+        }
+
+        private double calculateTF_IDF_WT(double TF_WT, double IDF_WT)
+        {
+            return TF_WT * IDF_WT;
+        }
+
+        private double calculateNormVector(double TF_IDF_WT, double vectorLength)
+        {
+            return TF_IDF_WT / Math.Sqrt(vectorLength);
+        }
+
+        private double calculateVectorLength(double TF_IDF_WT)
+        {
+            return Math.Pow(TF_IDF_WT, 2);
+        }
+
+        private double calculateVectorLength(Dictionary<string, double> wt)
+        {
+            double length = 0;
+            foreach (var term in wt)
+            {
+                length += calculateVectorLength(term.Value);
+            }
+            return length;
+        }
     }
 }
