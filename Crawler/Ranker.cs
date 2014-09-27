@@ -12,6 +12,7 @@ namespace Crawler
         private Dictionary<string, Dictionary<Document, double>> termFrequenciesWeigthed;
         private Dictionary<string, double> inverseDocumentFrequencies;
         private Dictionary<string, Dictionary<Document, double>> tfidf;
+        private Dictionary<string, Dictionary<Document, double>> normWt;
 
         public Ranker(Index index)
         {
@@ -19,9 +20,11 @@ namespace Crawler
             this.termFrequenciesWeigthed = new Dictionary<string, Dictionary<Document, double>>();
             this.inverseDocumentFrequencies = new Dictionary<string, double>();
             this.tfidf = new Dictionary<string, Dictionary<Document, double>>();
+            this.normWt = new Dictionary<string, Dictionary<Document, double>>();
             var tf = calculateTermFrequencyWeighting();
             var idf = inverseDocumentFrequencyWeighting();
             var s = termFrequencyInverseDocumentWeigthing();
+            var x = normalizeVectorWeigthed();
         }
 
 
@@ -75,7 +78,27 @@ namespace Crawler
             return tfidf;
         }
 
-        private void normalizeVector() { }
+        private Dictionary<string,Dictionary<Document,double>> normalizeVectorWeigthed() 
+        {
+            double length = 0;
+            foreach (var term in tfidf)
+            {
+                Dictionary<Document, double> docs = new Dictionary<Document, double>();
+                foreach (var doc in term.Value)
+                {
+                    foreach (var t in tfidf)
+                    {
+                        if (t.Value.ContainsKey(doc.Key))
+                        {
+                             length += Math.Pow(t.Value[doc.Key],2);
+                        }
+                    }
+                    docs.Add(doc.Key, doc.Value / Math.Sqrt(length));
+                }
+                normWt.Add(term.Key, docs);
+            }
+            return tfidf;
+        }
 
         private void calculateScore() { }
 
