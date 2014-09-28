@@ -12,16 +12,14 @@ namespace WebCrawler
 {
     class Program
     {
-        private static ISimilarityComparer<Document> similarity;
         private static ThreadedFrontier frontier;
 
-        private static Index index = new Index(new PorterStemmer());
+        private static Index index = new Index(new PorterStemmer(), new HashJaccardSimilarity<Document>(4));
 
         static void Main(string[] args)
         {
             Console.WindowWidth += 50;
 
-            similarity = new HashJaccardSimilarity<Document>(4);
             frontier = new ThreadedFrontier(new Exclusions());
             frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
 
@@ -29,44 +27,8 @@ namespace WebCrawler
 
             DateTime start = DateTime.Now;
 
-            Document doc = frontier.Next();
-            while (doc != null && index.SiteCount < 30)
-            {
-                Console.WriteLine("{0}", doc.URL);
-                Console.WriteLine("Loading {0} shingles...", doc.HTML.Split(' ').Length);
-                similarity.LoadShingles(doc, doc.HTML);
+            Crawler.StartAndWait(frontier, index, filter, 10);
 
-                Console.WriteLine("Determining similarities...");
-                bool known = false;
-                foreach (var l in index.GetDocuments())
-                {
-                    double simi = similarity.CalculateSimilarity(l, doc);
-                    if (simi >= 0.9)
-                    {
-                        WriteColorLine("{0:0.0}% similar to {1}", ConsoleColor.Green, simi * 100, l.URL.Address);
-                        known = true;
-                        break;
-                    }
-                }
-
-                if (!known)
-                {
-                    index.AddUrl(doc);
-                    Console.WriteLine("Extracting links...");
-                    var links = GetLinks(doc.URL, doc.HTML).ToArray();
-
-                    int c = 0;
-                    foreach (var l in links)
-                        if (filter.Allow(l))
-                        {
-                            frontier.Add(l);
-                            c++;
-                        }
-                    WriteColorLine("Found {0} links, added {1} to frontier", ConsoleColor.Cyan, links.Length, c);
-                }
-                Console.WriteLine();
-                doc = frontier.Next();
-            }
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
 

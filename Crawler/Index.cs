@@ -14,30 +14,84 @@ namespace WebCrawler
         private Dictionary<string, LinkedList<DocumentReference>> stems;
         private List<Document> sites;
 
-        public Index(IStemmer stemmer)
+        private ISimilarityComparer<Document> similarity;
+
+        public Index(IStemmer stemmer, ISimilarityComparer<Document> similarity)
         {
             this.stemmer = stemmer;
+            this.similarity = similarity;
 
             stems = new Dictionary<string, LinkedList<DocumentReference>>();
             sites = new List<Document>();
         }
 
-        public void AddUrl(Document document)
+        public void MergeIn(Index index)
         {
-            sites.Add(document);
+            List<Document> unique = new List<Document>(index.sites);
 
-            foreach (var term in stemmer.GetAllStems(document.HTML))
-            {
-                DocumentReference reference = new DocumentReference(document, term.Item2);
-                if (stems.ContainsKey(term.Item1))
-                    addToSortedList(stems[term.Item1].First, reference);
-                else
+            for (int i = 0; i < unique.Count; i++)
+                foreach (var s in sites)
                 {
-                    LinkedList<DocumentReference> l = new LinkedList<DocumentReference>();
-                    l.AddFirst(reference);
-                    stems.Add(term.Item1, l);
+                    double simi = similarity.CalculateSimilarity(s, unique[i]);
+                    if (simi >= 0.9)
+                    {
+                        unique.RemoveAt(i--);
+                        break;
+                    }
+                }
+
+            foreach (var doc in unique)
+                sites.Add(doc);
+
+            foreach (var term in index.stems.Keys)
+            {
+                if (!stems.ContainsKey(term))
+                    stems.Add(term, index.stems[term]);
+                else
+                    stems[term].MergeInto(index.stems[term], (a, b) => a.Document.Id.CompareTo(b.Document.Id), d => !unique.Contains(d.Document));
+            }
+        }
+
+        public static Index CreateEmptyCopy(Index copyFrom)
+        {
+            return new Index(new PorterStemmer(), copyFrom.similarity);
+        }
+
+        public bool TryAddUrl(Document document)
+        {
+            similarity.LoadShingles(document, document.HTML);
+
+            bool known = false;
+
+            foreach (var s in sites)
+            {
+                double simi = similarity.CalculateSimilarity(s, document);
+                if (simi >= 0.9)
+                {
+                    known = true;
+                    break;
                 }
             }
+
+            if (!known)
+            {
+                sites.Add(document);
+
+                foreach (var term in stemmer.GetAllStems(document.HTML))
+                {
+                    DocumentReference reference = new DocumentReference(document, term.Item2);
+                    if (stems.ContainsKey(term.Item1))
+                        addToSortedList(stems[term.Item1].First, reference);
+                    else
+                    {
+                        LinkedList<DocumentReference> l = new LinkedList<DocumentReference>();
+                        l.AddFirst(reference);
+                        stems.Add(term.Item1, l);
+                    }
+                }
+            }
+
+            return !known;
         }
 
         public int SiteCount
@@ -56,12 +110,6 @@ namespace WebCrawler
             }
             else
                 node.List.AddBefore(node, reference);
-        }
-
-        public IEnumerable<Document> GetDocuments()
-        {
-            foreach (var doc in sites)
-                yield return doc;
         }
 
         public class DocumentReference

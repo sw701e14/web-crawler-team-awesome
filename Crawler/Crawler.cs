@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebCrawler
@@ -13,37 +14,48 @@ namespace WebCrawler
         private ThreadedFrontier frontier;
         private Index index;
         private Filtering.Filter filter;
-        private ISimilarityComparer<Document> similarity;
+        private Action<Index> callback;
 
-        private Crawler(ThreadedFrontier frontier, Index index, Filtering.Filter filter, ISimilarityComparer<Document> similarity)
+        public static void StartAndWait(ThreadedFrontier frontier, Index index, Filtering.Filter filter, int count)
+        {
+            Crawler[] crawlers = new Crawler[count];
+            Thread[] threads = new Thread[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                Crawler craw = crawlers[i] = new Crawler(frontier, index, filter, ind =>
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.WriteLine("Merging Index");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+
+                    lock (index) { index.MergeIn(ind); }
+                });
+                threads[i] = new Thread(() => craw.Run());
+                threads[i].Start();
+            }
+
+            for (int i = 0; i < count; i++)
+                threads[i].Join();
+        }
+
+        private Crawler(ThreadedFrontier frontier, Index index, Filtering.Filter filter, Action<Index> callback)
         {
             this.frontier = frontier;
-            this.index = index;
+            this.index = Index.CreateEmptyCopy(index);
             this.filter = filter;
-            this.similarity = similarity;
+            this.callback = callback;
         }
 
         private void Run()
         {
-            Document doc = frontier.Next();
+            int count = 0;
+            Document doc = null;
+            while (doc == null) doc = frontier.Next();
             while (doc != null)
             {
-                similarity.LoadShingles(doc, doc.HTML);
-
-                bool known = false;
-                foreach (var l in index.GetDocuments())
+                if (index.TryAddUrl(doc))
                 {
-                    double simi = similarity.CalculateSimilarity(l, doc);
-                    if (simi >= 0.9)
-                    {
-                        known = true;
-                        break;
-                    }
-                }
-
-                if (!known)
-                {
-                    index.AddUrl(doc);
                     var links = GetLinks(doc.URL, doc.HTML).ToArray();
 
                     int c = 0;
@@ -55,8 +67,14 @@ namespace WebCrawler
                         }
                 }
                 Console.WriteLine("{0}", doc.URL);
+
+                count++;
+                if (count == 10)
+                    break;
                 doc = frontier.Next();
             }
+
+            callback(this.index);
         }
 
         private static IEnumerable<URL> GetLinks(URL origin, string html)

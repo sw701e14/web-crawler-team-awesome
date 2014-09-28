@@ -14,8 +14,8 @@ namespace WebCrawler
         private readonly URL url;
         private string html;
 
-        private static System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
-        private static string getHashString(string input)
+        private System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
+        private string getHashString(string input)
         {
             byte[] buffer = Encoding.Unicode.GetBytes(input);
             buffer = md5.ComputeHash(buffer);
