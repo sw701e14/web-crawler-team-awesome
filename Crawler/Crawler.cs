@@ -11,19 +11,14 @@ namespace WebCrawler
 {
     public class Crawler
     {
-        private ThreadedFrontier frontier;
-        private Index index;
-        private Filtering.Filter filter;
-        private Action<Index> callback;
-
         public static void StartAndWait(ThreadedFrontier frontier, Index index, Filtering.Filter filter, int count)
         {
-            Crawler[] crawlers = new Crawler[count];
+            Spider[] spiders = new Spider[count];
             Thread[] threads = new Thread[count];
 
             for (int i = 0; i < count; i++)
             {
-                Crawler craw = crawlers[i] = new Crawler(frontier, index, filter, ind =>
+                Spider sp = spiders[i] = new Spider(frontier, index, filter, ind =>
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
                     Console.WriteLine("Merging Index");
@@ -31,7 +26,7 @@ namespace WebCrawler
 
                     lock (index) { index.MergeIn(ind); }
                 });
-                threads[i] = new Thread(() => craw.Run());
+                threads[i] = new Thread(() => sp.Run());
                 threads[i].Start();
             }
 
@@ -39,77 +34,86 @@ namespace WebCrawler
                 threads[i].Join();
         }
 
-        private Crawler(ThreadedFrontier frontier, Index index, Filtering.Filter filter, Action<Index> callback)
+        private class Spider
         {
-            this.frontier = frontier;
-            this.index = Index.CreateEmptyCopy(index);
-            this.filter = filter;
-            this.callback = callback;
-        }
+            private ThreadedFrontier frontier;
+            private Index index;
+            private Filtering.Filter filter;
+            private Action<Index> callback;
 
-        private void Run()
-        {
-            int count = 0;
-            Document doc = null;
-            while (doc == null) doc = frontier.Next();
-            while (doc != null)
+            public Spider(ThreadedFrontier frontier, Index index, Filtering.Filter filter, Action<Index> callback)
             {
-                if (index.TryAddUrl(doc))
-                {
-                    var links = GetLinks(doc.URL, doc.HTML).ToArray();
-
-                    int c = 0;
-                    foreach (var l in links)
-                        if (filter.Allow(l))
-                        {
-                            frontier.Add(l);
-                            c++;
-                        }
-                }
-                Console.WriteLine("{0}", doc.URL);
-
-                count++;
-                if (count == 10)
-                    break;
-                doc = frontier.Next();
+                this.frontier = frontier;
+                this.index = Index.CreateEmptyCopy(index);
+                this.filter = filter;
+                this.callback = callback;
             }
 
-            callback(this.index);
-        }
-
-        private static IEnumerable<URL> GetLinks(URL origin, string html)
-        {
-            var matches = Regex.Matches(html, "<a[^>]+");
-
-            for (int i = 0; i < matches.Count; i++)
+            public void Run()
             {
-                string url = matches[i].Value;
-
-                url = getUrl(url);
-
-                if (url != null)
+                int count = 0;
+                Document doc = null;
+                while (doc == null) doc = frontier.Next();
+                while (doc != null)
                 {
-                    try { yield return origin.GetURLFromLink(url); }
-                    finally { /* This is only here so that try is allowed */ }
+                    if (index.TryAddUrl(doc))
+                    {
+                        var links = GetLinks(doc.URL, doc.HTML).ToArray();
+
+                        int c = 0;
+                        foreach (var l in links)
+                            if (filter.Allow(l))
+                            {
+                                frontier.Add(l);
+                                c++;
+                            }
+                    }
+                    Console.WriteLine("{0}", doc.URL);
+
+                    count++;
+                    if (count == 10)
+                        break;
+                    doc = frontier.Next();
+                }
+
+                callback(this.index);
+            }
+
+            private static IEnumerable<URL> GetLinks(URL origin, string html)
+            {
+                var matches = Regex.Matches(html, "<a[^>]+");
+
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    string url = matches[i].Value;
+
+                    url = getUrl(url);
+
+                    if (url != null)
+                    {
+                        try { yield return origin.GetURLFromLink(url); }
+                        finally { /* This is only here so that try is allowed */ }
+                    }
                 }
             }
-        }
-        private static string getUrl(string anchor)
-        {
-            Match m;
-            m = Regex.Match(anchor, "href=\"(?<url>[^\"]+)");
-            if (!m.Success)
-                return null;
+            private static string getUrl(string anchor)
+            {
+                Match m;
+                m = Regex.Match(anchor, "href=\"(?<url>[^\"]+)");
+                if (!m.Success)
+                    return null;
 
-            string href = m.Groups["url"].Value;
-            m = Regex.Match(href, "(?<pretag>[^#]*)#[^#]*");
-            if (m.Success)
-                href = m.Groups["pretag"].Value;
+                string href = m.Groups["url"].Value;
+                m = Regex.Match(href, "(?<pretag>[^#]*)#[^#]*");
+                if (m.Success)
+                    href = m.Groups["pretag"].Value;
 
-            if (href.Length == 0)
-                return null;
+                if (href.Length == 0)
+                    return null;
 
-            return href;
+                return href;
+            }
+
         }
     }
 }
