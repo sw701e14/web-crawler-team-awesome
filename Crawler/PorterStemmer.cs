@@ -6,39 +6,23 @@ using System.Threading.Tasks;
 
 namespace WebCrawler
 {
-    public class PorterStemmer : IStemmer
+    public class PorterStemmer
     {
         private char[] b;
         private int i, i_end, j, k;
-        private static int INC = 200;
 
-        public PorterStemmer()
+        public static string StemTerm(string s)
         {
-            b = new char[INC];
-            i = 0;
+            PorterStemmer stemmer = new PorterStemmer(s);
+            stemmer.stem();
+            return new string(stemmer.b, 0, stemmer.i_end);
+        }
+
+        private PorterStemmer(string term)
+        {
+            this.b = term.ToArray();
+            this.i = term.Length;
             i_end = 0;
-        }
-
-        public string StemTerm(string s)
-        {
-            setTerm(s);
-            stem();
-            return getTerm();
-        }
-
-        private void setTerm(string s)
-        {
-            i = s.Length;
-            char[] new_b = new char[i];
-            for (int c = 0; c < i; c++)
-                new_b[c] = s[c];
-
-            b = new_b;
-        }
-
-        private string getTerm()
-        {
-            return new String(b, 0, i_end);
         }
 
         private bool cons(int i)
