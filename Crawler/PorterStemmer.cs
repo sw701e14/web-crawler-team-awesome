@@ -41,11 +41,6 @@ namespace WebCrawler
             return new String(b, 0, i_end);
         }
 
-        public override string ToString()
-        {
-            return new String(b, 0, i_end);
-        }
-
         private bool cons(int i)
         {
             switch (b[i])
