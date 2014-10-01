@@ -9,14 +9,14 @@ namespace WebCrawler
 {
     public class Index
     {
-        private IStemmer stemmer;
+        private TermStemmer stemmer;
 
         private Dictionary<string, LinkedList<DocumentReference>> stems;
         private List<Document> sites;
 
         private ISimilarityComparer<Document> similarity;
 
-        public Index(IStemmer stemmer, ISimilarityComparer<Document> similarity)
+        public Index(TermStemmer stemmer, ISimilarityComparer<Document> similarity)
         {
             this.stemmer = stemmer;
             this.similarity = similarity;
@@ -54,7 +54,7 @@ namespace WebCrawler
 
         public static Index CreateEmptyCopy(Index copyFrom)
         {
-            return new Index(new PorterStemmer(), copyFrom.similarity);
+            return new Index(copyFrom.stemmer, copyFrom.similarity);
         }
 
         public bool TryAddUrl(Document document)

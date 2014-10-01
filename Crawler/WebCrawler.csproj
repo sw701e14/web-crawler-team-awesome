@@ -68,6 +68,7 @@
     <Compile Include="Similarity\SketchJaccardSimilarity.cs" />
     <Compile Include="Similarity\StringJaccardSimilarity.cs" />
     <Compile Include="IStemmer.cs" />
+    <Compile Include="TermStemmer.cs" />
     <Compile Include="ThreadedFrontier.cs" />
   </ItemGroup>
   <ItemGroup>
