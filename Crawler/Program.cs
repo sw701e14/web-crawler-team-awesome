@@ -14,7 +14,7 @@ namespace WebCrawler
     {
         private static ThreadedFrontier frontier;
 
-        private static Index index = new Index(PorterStemmer.StemTerm, new HashJaccardSimilarity<Document>(4));
+        private static Index index = new Index(TrimmingStemmer.GetStemmer(PorterStemmer.StemTerm), new HashJaccardSimilarity<Document>(4));
 
         static void Main(string[] args)
         {

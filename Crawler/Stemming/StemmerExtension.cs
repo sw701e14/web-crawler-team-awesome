@@ -40,7 +40,7 @@ namespace WebCrawler
         private static IEnumerable<string> getStemsInOrder(TermStemmer stemmer, IEnumerable<string> collection)
         {
             return from e in collection
-                   let term = stemmer(e).Trim('\0', ' ', '\t', '\r', '\n')
+                   let term = stemmer(e)
                    where term.Length > 0
                    orderby term
                    select term;
