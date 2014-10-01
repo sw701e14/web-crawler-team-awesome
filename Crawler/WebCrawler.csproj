@@ -57,7 +57,7 @@
     <Compile Include="Filtering\Filter.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="LinkedListMerging.cs" />
-    <Compile Include="PorterStemmer.cs" />
+    <Compile Include="Stemming\PorterStemmer.cs" />
     <Compile Include="Similarity\HashJaccardSimilarity.cs" />
     <Compile Include="Similarity\HashMethod.cs" />
     <Compile Include="Similarity\HashMethods.cs" />
@@ -67,8 +67,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Similarity\SketchJaccardSimilarity.cs" />
     <Compile Include="Similarity\StringJaccardSimilarity.cs" />
-    <Compile Include="StemmerExtension.cs" />
-    <Compile Include="TermStemmer.cs" />
+    <Compile Include="Stemming\StemmerExtension.cs" />
+    <Compile Include="Stemming\TermStemmer.cs" />
     <Compile Include="ThreadedFrontier.cs" />
   </ItemGroup>
   <ItemGroup>
