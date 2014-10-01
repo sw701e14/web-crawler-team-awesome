@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WebCrawler
 {
-    public class Frontier
+    public partial class Frontier
     {
         private Exclusions exclusions;
         private InnerFrontier frontier;
