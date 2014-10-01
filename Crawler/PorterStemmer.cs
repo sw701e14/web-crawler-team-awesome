@@ -26,7 +26,7 @@ namespace WebCrawler
             return getTerm();
         }
 
-        void setTerm(string s)
+        private void setTerm(string s)
         {
             i = s.Length;
             char[] new_b = new char[i];
@@ -36,7 +36,7 @@ namespace WebCrawler
             b = new_b;
         }
 
-        public string getTerm()
+        private string getTerm()
         {
             return new String(b, 0, i_end);
         }
@@ -315,7 +315,7 @@ namespace WebCrawler
                 k--;
         }
 
-        public void stem()
+        private void stem()
         {
             k = i - 1;
             if (k > 1)
