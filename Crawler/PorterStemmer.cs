@@ -34,7 +34,6 @@ namespace WebCrawler
                 new_b[c] = s[c];
 
             b = new_b;
-
         }
 
         public string getTerm()
@@ -42,44 +41,9 @@ namespace WebCrawler
             return new String(b, 0, i_end);
         }
 
-        public void add(char ch)
-        {
-            if (i == b.Length)
-            {
-                char[] new_b = new char[i + INC];
-                for (int c = 0; c < i; c++)
-                    new_b[c] = b[c];
-                b = new_b;
-            }
-            b[i++] = ch;
-        }
-
-        public void add(char[] w, int wLen)
-        {
-            if (i + wLen >= b.Length)
-            {
-                char[] new_b = new char[i + wLen + INC];
-                for (int c = 0; c < i; c++)
-                    new_b[c] = b[c];
-                b = new_b;
-            }
-            for (int c = 0; c < wLen; c++)
-                b[i++] = w[c];
-        }
-
         public override string ToString()
         {
             return new String(b, 0, i_end);
-        }
-
-        public int getResultLength()
-        {
-            return i_end;
-        }
-
-        public char[] getResultBuffer()
-        {
-            return b;
         }
 
         private bool cons(int i)
