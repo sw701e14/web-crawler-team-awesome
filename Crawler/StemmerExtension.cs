@@ -8,11 +8,6 @@ using System.Threading.Tasks;
 
 namespace WebCrawler
 {
-    public interface IStemmer
-    {
-        string StemTerm(string s);
-    }
-
     public static class StemmerExtension
     {
         public static IEnumerable<Tuple<string, int>> GetAllStems(this TermStemmer stemmer, string document)
