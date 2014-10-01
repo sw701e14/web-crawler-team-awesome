@@ -11,7 +11,7 @@ namespace WebCrawler
     {
         private TermStemmer stemmer;
 
-        private Dictionary<string, LinkedList<DocumentReference>> stems;
+        private Dictionary<string, List<DocumentReference>> stems;
         private List<Document> sites;
 
         private ISimilarityComparer<Document> similarity;
@@ -21,7 +21,7 @@ namespace WebCrawler
             this.stemmer = stemmer;
             this.similarity = similarity;
 
-            stems = new Dictionary<string, LinkedList<DocumentReference>>();
+            stems = new Dictionary<string, List<DocumentReference>>();
             sites = new List<Document>();
         }
 
@@ -81,11 +81,19 @@ namespace WebCrawler
                 {
                     DocumentReference reference = new DocumentReference(document, term.Item2);
                     if (stems.ContainsKey(term.Item1))
-                        addToSortedList(stems[term.Item1].First, reference);
+                    {
+                        var list = stems[term.Item1];
+                        int index = list.BinarySearch(reference.Document.Id, (x, y) => x.CompareTo(y), doc => doc.Document.Id);
+
+                        if (index > 0)
+                            throw new NotImplementedException("Index is not yet capable of handling count updates for documents.");
+                        else
+                            list.Insert(~index, reference);
+                    }
                     else
                     {
-                        LinkedList<DocumentReference> l = new LinkedList<DocumentReference>();
-                        l.AddFirst(reference);
+                        List<DocumentReference> l = new List<DocumentReference>();
+                        l.Add(reference);
                         stems.Add(term.Item1, l);
                     }
                 }
@@ -97,19 +105,6 @@ namespace WebCrawler
         public int SiteCount
         {
             get { return sites.Count; }
-        }
-
-        private void addToSortedList(LinkedListNode<DocumentReference> node, DocumentReference reference)
-        {
-            if (node.Value.Document.Id <= reference.Document.Id)
-            {
-                if (node.Next == null)
-                    node.List.AddLast(reference);
-                else
-                    addToSortedList(node.Next, reference);
-            }
-            else
-                node.List.AddBefore(node, reference);
         }
 
         public class DocumentReference

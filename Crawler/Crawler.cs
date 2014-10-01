@@ -11,8 +11,12 @@ namespace WebCrawler
 {
     public class Crawler
     {
-        public static void StartAndWait(Frontier frontier, Index index, Filtering.Filter filter, int count)
+        private const int SPIDER_PAGE_COUNT = 20;
+
+        public static void StartAndWait(Frontier frontier, Index index, Filtering.Filter filter, int pagecount)
         {
+            int count = (int)Math.Ceiling(pagecount / (double)SPIDER_PAGE_COUNT);
+
             Spider[] spiders = new Spider[count];
             Thread[] threads = new Thread[count];
 
@@ -21,7 +25,7 @@ namespace WebCrawler
                 Spider sp = spiders[i] = new Spider(frontier, index, filter, ind =>
                 {
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine("Merging Index");
+                    Console.WriteLine("Merging Index of {0}", ind.SiteCount);
                     Console.ForegroundColor = ConsoleColor.Gray;
 
                     lock (index) { index.MergeIn(ind); }
@@ -71,7 +75,7 @@ namespace WebCrawler
                     Console.WriteLine("{0}", doc.URL);
 
                     count++;
-                    if (count == 10)
+                    if (count == SPIDER_PAGE_COUNT)
                         break;
                     doc = frontier.Next();
                 }

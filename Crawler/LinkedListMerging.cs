@@ -79,5 +79,30 @@ namespace WebCrawler
                 }
             }
         }
+
+        public static void MergeInto<T>(this List<T> list, List<T> newlist, Comparison<T> comparer, Func<T, bool> skipped)
+        {
+            if (list.Count == 0)
+            {
+                for (int i = 0; i < newlist.Count; i++)
+                    list.Add(newlist[i]);
+                return;
+            }
+
+            for (int i = 0; i < newlist.Count; i++)
+            {
+                if (skipped(newlist[i]))
+                    continue;
+
+                int index = list.BinarySearch(newlist[i], comparer);
+
+                if (index > 0)
+                {
+                    throw new NotImplementedException("");
+                }
+                else
+                    list.Insert(~index, newlist[i]);
+            }
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace WebCrawler
 
             DateTime start = DateTime.Now;
 
-            Crawler.StartAndWait(frontier, index, filter, 10);
+            Crawler.StartAndWait(frontier, index, filter, 100);
 
             DateTime end = DateTime.Now;
             Console.WriteLine("Done in {0}", (end - start).TotalSeconds);
