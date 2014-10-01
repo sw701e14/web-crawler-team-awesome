@@ -10,7 +10,7 @@ namespace WebCrawler
     public class ThreadedFrontier
     {
         private Exclusions exclusions;
-        private Frontier frontier;
+        private InnerFrontier frontier;
         private Queue<URL> tempQueue;
 
         private System.Threading.Thread loaderThread;
@@ -22,7 +22,7 @@ namespace WebCrawler
         public ThreadedFrontier(Exclusions exclusions)
         {
             this.exclusions = exclusions;
-            this.frontier = new Frontier();
+            this.frontier = new InnerFrontier();
             this.tempQueue = new Queue<URL>();
 
             this.loaderThread = new System.Threading.Thread(() => { while (!killed)loadTemp(); });

@@ -53,7 +53,9 @@
     <Compile Include="Filtering\ExtentionFilter.cs" />
     <Compile Include="Filtering\LambdaFilter.cs" />
     <Compile Include="Filtering\OrFilter.cs" />
-    <Compile Include="Frontier.cs" />
+    <Compile Include="InnerFrontier.cs">
+      <DependentUpon>ThreadedFrontier.cs</DependentUpon>
+    </Compile>
     <Compile Include="Filtering\Filter.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="LinkedListMerging.cs" />
