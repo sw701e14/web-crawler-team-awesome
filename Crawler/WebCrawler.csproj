@@ -54,7 +54,7 @@
     <Compile Include="Filtering\LambdaFilter.cs" />
     <Compile Include="Filtering\OrFilter.cs" />
     <Compile Include="InnerFrontier.cs">
-      <DependentUpon>ThreadedFrontier.cs</DependentUpon>
+      <DependentUpon>Frontier.cs</DependentUpon>
     </Compile>
     <Compile Include="Filtering\Filter.cs" />
     <Compile Include="Index.cs" />
@@ -72,7 +72,7 @@
     <Compile Include="Stemming\StemmerExtension.cs" />
     <Compile Include="Stemming\TermStemmer.cs" />
     <Compile Include="Stemming\TrimmingStemmer.cs" />
-    <Compile Include="ThreadedFrontier.cs" />
+    <Compile Include="Frontier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

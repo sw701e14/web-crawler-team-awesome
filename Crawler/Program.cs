@@ -12,7 +12,7 @@ namespace WebCrawler
 {
     class Program
     {
-        private static ThreadedFrontier frontier;
+        private static Frontier frontier;
 
         private static Index index = new Index(TrimmingStemmer.GetStemmer(PorterStemmer.StemTerm), new HashJaccardSimilarity<Document>(4));
 
@@ -20,7 +20,7 @@ namespace WebCrawler
         {
             Console.WindowWidth += 50;
 
-            frontier = new ThreadedFrontier(new Exclusions());
+            frontier = new Frontier(new Exclusions());
             frontier.Add(new URL("http://en.wikipedia.org/wiki/Teenage_Mutant_Ninja_Turtles"));
 
             Filter filter = new DomainFilter("en.wikipedia.org") & new ExtentionFilter(false, "jpg", "jpeg", "gif", "png", "rar", "zip", "exe", "pdf");

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace WebCrawler
 {
-    public partial class ThreadedFrontier
+    public partial class Frontier
     {
         public class InnerFrontier
         {

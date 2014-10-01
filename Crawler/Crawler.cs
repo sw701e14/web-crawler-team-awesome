@@ -11,7 +11,7 @@ namespace WebCrawler
 {
     public class Crawler
     {
-        public static void StartAndWait(ThreadedFrontier frontier, Index index, Filtering.Filter filter, int count)
+        public static void StartAndWait(Frontier frontier, Index index, Filtering.Filter filter, int count)
         {
             Spider[] spiders = new Spider[count];
             Thread[] threads = new Thread[count];
@@ -36,12 +36,12 @@ namespace WebCrawler
 
         private class Spider
         {
-            private ThreadedFrontier frontier;
+            private Frontier frontier;
             private Index index;
             private Filtering.Filter filter;
             private Action<Index> callback;
 
-            public Spider(ThreadedFrontier frontier, Index index, Filtering.Filter filter, Action<Index> callback)
+            public Spider(Frontier frontier, Index index, Filtering.Filter filter, Action<Index> callback)
             {
                 this.frontier = frontier;
                 this.index = Index.CreateEmptyCopy(index);

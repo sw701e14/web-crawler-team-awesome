@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WebCrawler
 {
-    public class ThreadedFrontier
+    public class Frontier
     {
         private Exclusions exclusions;
         private InnerFrontier frontier;
@@ -19,7 +19,7 @@ namespace WebCrawler
         private bool empty = true;
         private object emptyObject = new object();
 
-        public ThreadedFrontier(Exclusions exclusions)
+        public Frontier(Exclusions exclusions)
         {
             this.exclusions = exclusions;
             this.frontier = new InnerFrontier();
