@@ -8,6 +8,7 @@ namespace WebCrawler
         {
             return s =>
                 {
+                    s = s.ToLower();
                     s = trimSymbols(s);
                     s = stemmer(s);
                     return s = trimSymbols(s);
