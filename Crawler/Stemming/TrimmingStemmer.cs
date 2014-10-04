@@ -11,16 +11,17 @@ namespace WebCrawler
                     s = s.ToLower();
                     s = trimSymbols(s);
                     s = stemmer(s);
-                    return s = trimSymbols(s);
+                    s = trimSymbols(s);
+                    return s.Length < 3 ? string.Empty : s;
                 };
         }
 
         private static string trimSymbols(string input)
         {
             for (int i = 0; i < input.Length; i++)
-                if (char.IsLetterOrDigit(input, i))
+                if (char.IsLetter(input, i))
                     for (int j = input.Length - 1; j >= i; j--)
-                        if (char.IsLetterOrDigit(input, j))
+                        if (char.IsLetter(input, j))
                             return input.Substring(i, j - i + 1);
 
             return string.Empty;
