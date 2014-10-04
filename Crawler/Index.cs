@@ -25,6 +25,20 @@ namespace WebCrawler
             sites = new List<Document>();
         }
 
+        public IEnumerable<KeyValuePair<string, DocumentReference[]>> GetStems()
+        {
+            foreach (var s in stems)
+                yield return new KeyValuePair<string, DocumentReference[]>(s.Key, s.Value.ToArray());
+        }
+
+        public DocumentReference[] GetDocuments(string stem)
+        {
+            if (!stems.ContainsKey(stem))
+                return new DocumentReference[0];
+            else
+                return stems[stem].ToArray();
+        }
+
         public void MergeIn(Index index)
         {
             List<Document> unique = new List<Document>(index.sites);
